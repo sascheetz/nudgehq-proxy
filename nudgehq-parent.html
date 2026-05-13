@@ -698,11 +698,10 @@ async function enrichCourseNames(token) {
       map[String(c.id)] = c.name || c.course_code || ('Course ' + c.id);
     });
     assignments.forEach(a => {
-      // Handle both "Course 12345" format and raw number strings
-      const cid = String(a.course).replace(/^Course\s+/, '').trim();
+      const cid = String(a.course).replace(/^Course\s+/i, '').trim();
       if (map[cid]) a.course = map[cid];
     });
-  } catch(e) { console.warn('Course name enrichment failed:', e.message); }
+  } catch(e) {}
 }
 
 // ══════════════════════════════════════
