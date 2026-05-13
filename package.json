@@ -1,0 +1,12 @@
+{
+  "name": "nudgehq-proxy",
+  "version": "1.0.0",
+  "description": "Canvas API proxy for Nudge HQ",
+  "main": "proxy.js",
+  "scripts": {
+    "start": "node proxy.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
