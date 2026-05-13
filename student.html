@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>My Assignments</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf8f4;
+    --surface: #fff;
+    --border: #ede8df;
+    --ink: #1c1814;
+    --sub: #8a8178;
+    --muted: #c4bdb4;
+    --fire: #d94f3d;
+    --soon: #c96a1a;
+    --ok: #a08010;
+    --chill: #2a7a56;
+    --check: #2a7a56;
+    --serif: 'DM Sans', sans-serif;
+    --mono: 'Inter', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--mono);
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 20px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-style: italic;
+    font-size: 1.7rem;
+    color: var(--ink);
+    line-height: 1;
+  }
+
+  .date-label {
+    font-size: 0.58rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* Progress bar */
+  .progress-wrap { display: flex; align-items: center; gap: 10px; }
+  .progress-bar {
+    flex: 1;
+    height: 5px;
+    background: var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--check);
+    border-radius: 10px;
+    transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    width: 0%;
+  }
+  .progress-label {
+    font-size: 0.6rem;
+    color: var(--sub);
+    white-space: nowrap;
+    min-width: 48px;
+    text-align: right;
+  }
+
+  /* ── Setup banner ── */
+  #setup-banner {
+    background: #fffbf0;
+    border-bottom: 1px solid #ede0b0;
+    padding: 14px 20px;
+    font-size: 0.62rem;
+    color: #7a6010;
+    line-height: 1.65;
+    display: none;
+  }
+  #setup-banner.show { display: block; }
+  #setup-banner a { color: #5a4800; font-weight: 500; }
+  #setup-banner button {
+    background: #5a4800; color: #fff; border: none; border-radius: 5px;
+    padding: 5px 12px; font-family: var(--mono); font-size: 0.6rem;
+    cursor: pointer; margin-top: 8px; display: block;
+  }
+
+  /* ── Config panel ── */
+  #config-panel {
+    display: none;
+    padding: 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  #config-panel.show { display: block; }
+  #config-panel h3 { font-family: var(--serif); font-style: italic; font-size: 1rem; margin-bottom: 12px; }
+  .cfg-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+  .cfg-field label { font-size: 0.6rem; color: var(--sub); }
+  .cfg-field input {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: 9px 12px; font-family: var(--mono); font-size: 0.65rem;
+    color: var(--ink); outline: none; width: 100%;
+  }
+  .cfg-field input:focus { border-color: var(--check); }
+  .cfg-field input::placeholder { color: var(--muted); }
+  .cfg-save {
+    background: var(--ink); color: var(--bg); border: none; border-radius: 7px;
+    padding: 10px; font-family: var(--mono); font-size: 0.65rem; width: 100%;
+    cursor: pointer; margin-top: 4px;
+  }
+  .cfg-hint { font-size: 0.57rem; color: var(--muted); line-height: 1.6; margin-top: 8px; }
+
+  /* ── Section labels ── */
+  .section-head {
+    padding: 18px 20px 8px;
+    font-size: 0.56rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+  }
+
+  /* ── Assignment rows ── */
+  .a-row {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    transition: opacity 0.3s;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .a-row:active { background: #f5f1ea; }
+  .a-row.done { opacity: 0.38; }
+
+  /* Checkbox */
+  .check-wrap {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+    transition: all 0.2s;
+    background: var(--surface);
+  }
+  .a-row.done .check-wrap {
+    background: var(--check);
+    border-color: var(--check);
+  }
+  .check-icon {
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    color: white;
+    font-size: 12px;
+    line-height: 1;
+  }
+  .a-row.done .check-icon { opacity: 1; transform: scale(1); }
+
+  /* Content */
+  .a-content { flex: 1; min-width: 0; }
+  .a-title {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 0.95rem;
+    line-height: 1.35;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .a-row.done .a-title { text-decoration: line-through; color: var(--muted); }
+  .a-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .a-course { font-size: 0.55rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+  .a-due {
+    font-size: 0.6rem;
+    font-weight: 400;
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+  .due-fire  { background: #fdf0ee; color: var(--fire);  }
+  .due-soon  { background: #fdf3ea; color: var(--soon);  }
+  .due-ok    { background: #fefaee; color: var(--ok);    }
+  .due-chill { background: #eef7f3; color: var(--chill); }
+  .due-miss  { background: #f9f0fb; color: #8b2da0;      }
+
+  /* ── Empty / Loading ── */
+  #empty {
+    display: none;
+    text-align: center;
+    padding: 70px 30px;
+    color: var(--muted);
+  }
+  #empty .big { font-family: var(--serif); font-style: italic; font-size: 2.5rem; margin-bottom: 10px; }
+  #empty p { font-size: 0.65rem; line-height: 1.7; }
+
+  #loading {
+    display: none;
+    text-align: center;
+    padding: 60px;
+    color: var(--muted);
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+  }
+  .pulse { animation: pulse 1.3s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:0.25} 50%{opacity:1} }
+
+  /* ── Completion celebration ── */
+  #celebrate {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(250,248,244,0.92);
+    z-index: 50;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 40px;
+    backdrop-filter: blur(4px);
+  }
+  #celebrate.show { display: flex; }
+  #celebrate .cel-big { font-size: 3.5rem; margin-bottom: 12px; animation: bounce 0.6s ease; }
+  #celebrate h2 { font-family: var(--serif); font-style: italic; font-size: 1.8rem; margin-bottom: 8px; }
+  #celebrate p { font-size: 0.68rem; color: var(--sub); line-height: 1.7; margin-bottom: 20px; }
+  #celebrate button {
+    background: var(--ink); color: var(--bg); border: none; border-radius: 8px;
+    padding: 12px 28px; font-family: var(--mono); font-size: 0.68rem; cursor: pointer;
+  }
+  @keyframes bounce { 0%{transform:scale(0.5)} 70%{transform:scale(1.15)} 100%{transform:scale(1)} }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(10px);
+    background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 20px;
+    font-size: 0.63rem; opacity: 0; transition: all 0.25s; pointer-events: none;
+    white-space: nowrap; z-index: 100;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── Settings button ── */
+  .settings-btn {
+    background: none; border: none; color: var(--muted); cursor: pointer;
+    font-size: 1rem; padding: 2px; line-height: 1;
+  }
+  .settings-btn:active { color: var(--sub); }
+
+  /* All done banner */
+  #all-done {
+    display: none;
+    margin: 20px;
+    background: #eef7f3;
+    border: 1px solid #b0d8c8;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+  }
+  #all-done.show { display: block; }
+  #all-done .ad-icon { font-size: 2rem; margin-bottom: 8px; }
+  #all-done h3 { font-family: var(--serif); font-style: italic; font-size: 1.1rem; color: var(--chill); margin-bottom: 4px; }
+  #all-done p  { font-size: 0.62rem; color: var(--sub); line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <h1>My Assignments</h1>
+    <button class="settings-btn" onclick="toggleConfig()" title="Settings">⚙</button>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="progress-label" id="progress-label">0 / 0</div>
+  </div>
+</header>
+
+<!-- Setup banner -->
+<div id="setup-banner">
+  ⚠️ Firebase isn't set up yet — check-offs will only save on this device.<br>
+  <a href="#" onclick="toggleConfig(); return false;">Tap here to add your Firebase config</a> to sync across devices.
+  <button onclick="document.getElementById('setup-banner').classList.remove('show')">Dismiss for now</button>
+</div>
+
+<!-- Config panel -->
+<div id="config-panel">
+  <h3>Setup</h3>
+  <div class="cfg-field">
+    <label>Canvas iCal URL</label>
+    <input type="url" id="cfg-ical" placeholder="webcal://lakota.instructure.com/feeds/…">
+  </div>
+  <div class="cfg-field">
+    <label>Firebase Database URL</label>
+    <input type="url" id="cfg-fb-url" placeholder="https://your-project-default-rtdb.firebaseio.com">
+  </div>
+  <div class="cfg-field">
+    <label>Firebase API Key</label>
+    <input type="text" id="cfg-fb-key" placeholder="AIzaSy…">
+  </div>
+  <button class="cfg-save" onclick="saveConfig()">Save & Load</button>
+  <p class="cfg-hint">
+    Your parent sets up Firebase — they'll give you the Database URL and API Key.<br>
+    The iCal URL comes from Canvas → Calendar → Calendar Feed.
+  </p>
+</div>
+
+<!-- Main list -->
+<div id="list-wrap">
+  <div id="loading"><span class="pulse">Loading your assignments…</span></div>
+  <div id="empty">
+    <div class="big">✌️</div>
+    <p>No assignments yet.<br>Tap ⚙ to connect your Canvas calendar.</p>
+  </div>
+  <div id="all-done">
+    <div class="ad-icon">🎉</div>
+    <h3>Everything's done!</h3>
+    <p>You've checked off all your assignments.<br>Seriously — well done.</p>
+  </div>
+  <div id="assignment-list"></div>
+</div>
+
+<!-- Celebration overlay -->
+<div id="celebrate">
+  <div class="cel-big">🎉</div>
+  <h2>All done!</h2>
+  <p>You checked off every assignment.<br>That took real effort. Proud of you.</p>
+  <button onclick="closeCelebrate()">Thanks 😊</button>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script type="module">
+// ══════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════
+let cfg = JSON.parse(localStorage.getItem('nhq_student_cfg') || '{}');
+let assignments = [];
+let firebaseDb = null;
+
+function saveConfig() {
+  cfg = {
+    ical:  document.getElementById('cfg-ical').value.trim(),
+    fbUrl: document.getElementById('cfg-fb-url').value.trim(),
+    fbKey: document.getElementById('cfg-fb-key').value.trim(),
+  };
+  localStorage.setItem('nhq_student_cfg', JSON.stringify(cfg));
+  document.getElementById('config-panel').classList.remove('show');
+  init();
+}
+
+function toggleConfig() {
+  const p = document.getElementById('config-panel');
+  p.classList.toggle('show');
+  if (p.classList.contains('show')) {
+    document.getElementById('cfg-ical').value  = cfg.ical  || '';
+    document.getElementById('cfg-fb-url').value = cfg.fbUrl || '';
+    document.getElementById('cfg-fb-key').value = cfg.fbKey || '';
+  }
+}
+window.toggleConfig = toggleConfig;
+window.saveConfig   = saveConfig;
+
+// ══════════════════════════════════════
+// FIREBASE
+// ══════════════════════════════════════
+async function initFirebase() {
+  if (!cfg.fbUrl || !cfg.fbKey) {
+    document.getElementById('setup-banner').classList.add('show');
+    return false;
+  }
+  try {
+    const { initializeApp }          = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const { getDatabase, ref, set, onValue } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+
+    const app = initializeApp({ apiKey: cfg.fbKey, databaseURL: cfg.fbUrl }, 'student-app');
+    firebaseDb = { db: getDatabase(app), ref, set, onValue };
+    return true;
+  } catch(e) {
+    console.warn('Firebase init failed:', e);
+    document.getElementById('setup-banner').classList.add('show');
+    return false;
+  }
+}
+
+async function fbSet(id, checked) {
+  if (!firebaseDb) return;
+  const { db, ref, set } = firebaseDb;
+  try {
+    await set(ref(db, `nhq_checked/${id}`), checked);
+  } catch(e) { console.warn('Firebase write failed:', e); }
+}
+
+function fbListen(callback) {
+  if (!firebaseDb) return;
+  const { db, ref, onValue } = firebaseDb;
+  onValue(ref(db, 'nhq_checked'), snap => {
+    const data = snap.val() || {};
+    callback(data);
+  });
+}
+
+// ══════════════════════════════════════
+// LOCAL FALLBACK STORE
+// ══════════════════════════════════════
+let localChecked = JSON.parse(localStorage.getItem('nhq_checked') || '{}');
+
+function isChecked(id) {
+  return localChecked[id] === true;
+}
+
+async function setChecked(id, val) {
+  localChecked[id] = val;
+  localStorage.setItem('nhq_checked', JSON.stringify(localChecked));
+  await fbSet(id, val);
+  renderProgress();
+  renderAllDone();
+}
+
+// ══════════════════════════════════════
+// iCAL LOAD
+// ══════════════════════════════════════
+async function loadICal() {
+  if (!cfg.ical) { document.getElementById('empty').style.display = 'block'; return; }
+  showLoading(true);
+  try {
+    const url   = cfg.ical.replace(/^webcal:\/\//i, 'https://');
+    const proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+    const res   = await fetch(proxy);
+    if (!res.ok) throw new Error('Could not fetch calendar');
+    const text  = await res.text();
+    assignments = parseICal(text);
+    renderList();
+  } catch(e) {
+    showToast('Could not load calendar');
+    document.getElementById('empty').style.display = 'block';
+  }
+  showLoading(false);
+}
+
+function parseICal(text) {
+  const events = [];
+  const blocks = text.split('BEGIN:VEVENT');
+  for (let i = 1; i < blocks.length; i++) {
+    const b   = blocks[i];
+    const get = k => { const m = b.match(new RegExp(k+'[^:]*:([^\r\n]+)')); return m?m[1].trim():''; };
+    const due = parseDate(get('DTDUE')||get('DTSTART')||'');
+    if (!due) continue;
+    const now = new Date();
+    if (due < new Date(now - 7*24*3600000)) continue; // skip > 1 week old
+    let course = get('CATEGORIES') || '';
+    if (!course) { const m=(get('DESCRIPTION')||'').match(/Course:\s*([^\n\\]+)/i); course=m?m[1].trim():'Canvas'; }
+    events.push({ id: get('UID')||Math.random().toString(36), title: get('SUMMARY')||'Untitled', course, due });
+  }
+  return events.sort((a,b)=>a.due-b.due);
+}
+
+function parseDate(s) {
+  if (!s) return null;
+  s = s.replace(/[TZ]/g,'');
+  if (s.length < 8) return null;
+  return new Date(`${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}T${s.slice(8,10)||'23'}:${s.slice(10,12)||'59'}:00`);
+}
+
+// ══════════════════════════════════════
+// URGENCY
+// ══════════════════════════════════════
+function urgency(due) {
+  const h = (due - new Date()) / 3600000;
+  if (h < -0.5) return 'miss';
+  if (h <= 24)  return 'fire';
+  if (h <= 168) return 'soon';
+  if (h <= 336) return 'ok';
+  return 'chill';
+}
+
+function dueLabel(due) {
+  const h = (due - new Date()) / 3600000;
+  if (h < -0.5) {
+    const d = Math.floor(Math.abs(h)/24);
+    return d > 0 ? `${d}d overdue` : 'overdue';
+  }
+  if (h < 1)  return 'due < 1h';
+  if (h < 24) return `due in ${Math.floor(h)}h`;
+  const d = Math.floor(h/24);
+  return d === 1 ? 'due tomorrow' : `due in ${d}d`;
+}
+
+// ══════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════
+function renderList() {
+  const list = document.getElementById('assignment-list');
+  list.innerHTML = '';
+  document.getElementById('empty').style.display     = assignments.length ? 'none' : 'block';
+  document.getElementById('all-done').classList.remove('show');
+
+  // Separate missing / upcoming / done
+  const missing  = assignments.filter(a => urgency(a.due)==='miss' && !isChecked(a.id));
+  const upcoming = assignments.filter(a => urgency(a.due)!=='miss' && !isChecked(a.id));
+  const done     = assignments.filter(a => isChecked(a.id));
+
+  if (missing.length) {
+    list.insertAdjacentHTML('beforeend', `<div class="section-head">Overdue</div>`);
+    missing.forEach(a => list.appendChild(makeRow(a)));
+  }
+  if (upcoming.length) {
+    list.insertAdjacentHTML('beforeend', `<div class="section-head">Upcoming</div>`);
+    upcoming.forEach(a => list.appendChild(makeRow(a)));
+  }
+  if (done.length) {
+    list.insertAdjacentHTML('beforeend', `<div class="section-head">Completed</div>`);
+    done.forEach(a => list.appendChild(makeRow(a)));
+  }
+
+  renderProgress();
+  renderAllDone();
+}
+
+function makeRow(a) {
+  const checked = isChecked(a.id);
+  const u       = urgency(a.due);
+  const dueMap  = { miss:'due-miss', fire:'due-fire', soon:'due-soon', ok:'due-ok', chill:'due-chill' };
+
+  const row = document.createElement('div');
+  row.className = `a-row${checked?' done':''}`;
+  row.dataset.id = a.id;
+  row.innerHTML  = `
+    <div class="check-wrap"><span class="check-icon">✓</span></div>
+    <div class="a-content">
+      <div class="a-title">${esc(a.title)}</div>
+      <div class="a-meta">
+        <span class="a-course">${esc(a.course)}</span>
+        <span class="a-due ${dueMap[u]}">${dueLabel(a.due)}</span>
+      </div>
+    </div>`;
+
+  row.addEventListener('click', () => toggleRow(a.id, row));
+  return row;
+}
+
+async function toggleRow(id, row) {
+  const nowChecked = !isChecked(id);
+  await setChecked(id, nowChecked);
+
+  row.classList.toggle('done', nowChecked);
+  if (nowChecked) {
+    // Animate check then re-sort
+    setTimeout(() => renderList(), 600);
+    // Check if all done
+    const allDone = assignments.every(a => isChecked(a.id));
+    if (allDone) setTimeout(showCelebrate, 700);
+    showToast('Marked as done ✓');
+  } else {
+    renderList();
+  }
+}
+
+function renderProgress() {
+  const total   = assignments.length;
+  const checked = assignments.filter(a => isChecked(a.id)).length;
+  const pct     = total ? Math.round((checked/total)*100) : 0;
+  document.getElementById('progress-fill').style.width  = pct + '%';
+  document.getElementById('progress-label').textContent = `${checked} / ${total}`;
+}
+
+function renderAllDone() {
+  const total   = assignments.length;
+  const checked = assignments.filter(a => isChecked(a.id)).length;
+  const banner  = document.getElementById('all-done');
+  const list    = document.getElementById('assignment-list');
+  if (total > 0 && checked === total) {
+    banner.classList.add('show');
+    list.style.display = 'none';
+  } else {
+    banner.classList.remove('show');
+    list.style.display = 'block';
+  }
+}
+
+// ══════════════════════════════════════
+// CELEBRATE
+// ══════════════════════════════════════
+function showCelebrate() { document.getElementById('celebrate').classList.add('show'); }
+function closeCelebrate() { document.getElementById('celebrate').classList.remove('show'); }
+window.closeCelebrate = closeCelebrate;
+
+// ══════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════
+function showLoading(on) { document.getElementById('loading').style.display = on ? 'block':'none'; }
+
+let toastT;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+async function init() {
+  showLoading(true);
+  const fbOk = await initFirebase();
+
+  if (fbOk) {
+    // Listen for remote changes
+    fbListen(data => {
+      localChecked = data;
+      localStorage.setItem('nhq_checked', JSON.stringify(localChecked));
+      renderList();
+    });
+  }
+
+  await loadICal();
+  showLoading(false);
+
+  // Show config if nothing is set up
+  if (!cfg.ical) {
+    document.getElementById('empty').style.display = 'block';
+    document.getElementById('config-panel').classList.add('show');
+  }
+}
+
+// Update date label safely
+document.addEventListener('DOMContentLoaded', () => {
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const now  = new Date();
+  const el   = document.querySelector('.date-label');
+  if (el) el.textContent = days[now.getDay()] + ' · ' + now.toLocaleDateString('en-US',{month:'long',day:'numeric'});
+});
+
+init();
+</script>
+</body>
+</html>
