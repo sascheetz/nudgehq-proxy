@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nudge HQ — Parent Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --surface: #fdfaf4;
+    --surface2: #f0ebe0;
+    --border: #e0d8c8;
+    --border2: #ccc4b0;
+    --ink: #1c1814;
+    --subink: #6b6358;
+    --muted: #b0a898;
+    --fire: #c0392b;
+    --soon: #c96a1a;
+    --ok: #a08010;
+    --chill: #2a7a56;
+    --accent: #3d5a99;
+    --missing: #7b2d8b;
+    --student: #c07010;
+    --serif: 'DM Sans', sans-serif;
+    --mono: 'Inter', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--mono); font-size: 13px;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 0% 0%, rgba(61,90,153,0.05) 0%, transparent 55%),
+      radial-gradient(ellipse at 100% 100%, rgba(123,45,139,0.04) 0%, transparent 55%);
+  }
+  .shell { display: grid; grid-template-columns: 310px 1fr; min-height: 100vh; }
+
+  /* ── Sidebar ── */
+  aside {
+    background: var(--surface); border-right: 1px solid var(--border);
+    padding: 28px 22px 40px; display: flex; flex-direction: column; gap: 22px;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  }
+  .wordmark { padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+  .wordmark h1 { font-family: var(--serif); font-weight: 300; font-style: italic; font-size: 1.9rem; line-height: 1; }
+  .wordmark h1 strong { font-weight: 600; color: var(--accent); font-style: normal; }
+  .wordmark p { font-size: 0.58rem; color: var(--muted); letter-spacing: 0.16em; text-transform: uppercase; margin-top: 5px; }
+
+  .s-label { font-size: 0.56rem; text-transform: uppercase; letter-spacing: 0.16em; color: var(--muted); margin-bottom: 9px; }
+  .s-section { display: flex; flex-direction: column; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; }
+  .field label { font-size: 0.6rem; color: var(--subink); }
+  input[type="text"], input[type="tel"], input[type="password"], input[type="url"] {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 11px; font-family: var(--mono); font-size: 0.63rem; color: var(--ink);
+    outline: none; transition: border-color 0.2s; width: 100%;
+  }
+  input:focus { border-color: var(--accent); }
+  input::placeholder { color: var(--muted); }
+
+  .canvas-domain {
+    font-size: 0.62rem; color: var(--subink); background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 11px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+  }
+  .canvas-domain span { color: var(--chill); font-size: 0.58rem; }
+
+  .btn { border: none; border-radius: 7px; padding: 9px 14px; font-family: var(--mono); font-size: 0.63rem; font-weight: 500; cursor: pointer; transition: opacity 0.15s, transform 0.1s; width: 100%; letter-spacing: 0.04em; margin-bottom: 6px; }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary   { background: var(--accent);  color: #fff; }
+  .btn-secondary { background: var(--surface2);color: var(--subink); border: 1px solid var(--border); }
+  .btn-purple    { background: var(--missing); color: #fff; }
+  .btn-orange    { background: var(--student); color: #fff; }
+  .btn-primary:hover, .btn-purple:hover, .btn-orange:hover { opacity: 0.85; }
+  .btn-secondary:hover { color: var(--ink); border-color: var(--border2); }
+
+  .hint { font-size: 0.57rem; color: var(--muted); line-height: 1.65; margin-top: 3px; }
+  .ilink { background: none; border: none; padding: 0; color: var(--accent); cursor: pointer; font-family: var(--mono); font-size: 0.57rem; }
+
+  /* Firebase status */
+  .fb-status {
+    font-size: 0.58rem; padding: 6px 10px; border-radius: 6px; display: flex; align-items: center; gap: 6px;
+    margin-bottom: 4px;
+  }
+  .fb-status.connected    { background: rgba(62,207,142,0.1);  color: var(--chill);  border: 1px solid rgba(62,207,142,0.25); }
+  .fb-status.disconnected { background: rgba(245,200,66,0.08); color: var(--ok);     border: 1px solid rgba(245,200,66,0.25); }
+  .fb-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .stat-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; }
+  .stat-num { font-family: var(--serif); font-weight: 600; font-size: 1.7rem; line-height: 1; color: var(--ink); }
+  .stat-lbl { font-size: 0.5rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; margin-top: 3px; }
+  .stat-box.s-fire    .stat-num { color: var(--fire); }
+  .stat-box.s-missing .stat-num { color: var(--missing); }
+  .stat-box.s-student .stat-num { color: var(--student); }
+
+  .guide-btn { background: none; border: 1px dashed var(--border); border-radius: 7px; padding: 9px 12px; font-family: var(--mono); font-size: 0.6rem; color: var(--subink); cursor: pointer; text-align: left; transition: all 0.15s; width: 100%; margin-bottom: 5px; }
+  .guide-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Main ── */
+  main { padding: 28px 26px; overflow-y: auto; }
+  .main-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+  .main-top h2 { font-family: var(--serif); font-weight: 300; font-style: italic; font-size: 1.4rem; }
+  .last-sync { font-size: 0.57rem; color: var(--muted); }
+
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+  .chip { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 0.58rem; font-family: var(--mono); color: var(--subink); cursor: pointer; transition: all 0.15s; }
+  .chip:hover:not(.active) { border-color: var(--border2); color: var(--ink); }
+  .chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .chip.active.c-missing { background: var(--missing); border-color: var(--missing); }
+  .chip.active.c-student { background: var(--student); border-color: var(--student); }
+
+  /* Missing banner */
+  #missing-banner { display: none; background: #fdf0fb; border: 1px solid #d9aee8; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; align-items: center; gap: 14px; flex-wrap: wrap; }
+  #missing-banner.on { display: flex; }
+  .mb-text strong { color: var(--missing); font-size: 0.75rem; display: block; margin-bottom: 3px; }
+  .mb-text span   { font-size: 0.6rem; color: var(--subink); line-height: 1.55; }
+  .mb-btn { background: var(--missing); color: #fff; border: none; border-radius: 7px; padding: 9px 15px; font-family: var(--mono); font-size: 0.62rem; cursor: pointer; white-space: nowrap; transition: opacity 0.15s; flex-shrink: 0; }
+  .mb-btn:hover { opacity: 0.85; }
+  .mb-btn:disabled { opacity: 0.4; cursor: default; }
+
+  /* Student checked banner */
+  #student-banner { display: none; background: #fffbf0; border: 1px solid #f0d090; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; }
+  #student-banner.on { display: block; }
+  #student-banner strong { color: var(--student); font-size: 0.7rem; display: block; margin-bottom: 3px; }
+  #student-banner span   { font-size: 0.6rem; color: var(--subink); line-height: 1.55; }
+
+  /* Cards */
+  #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 9px; transition: transform 0.2s, box-shadow 0.2s; animation: up 0.3s ease both; }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.25); }
+  .card.c-zeroed  { border-color: #f5c5bf; background: #fff8f8; }
+  .card.c-missing { border-color: #d9aee8; background: #fdf8ff; }
+  .card.c-student-done { border-color: #f0d090; background: #fffbf0; }
+  .card.c-parent-done  { opacity: 0.38; }
+  .card.c-parent-done .c-title { text-decoration: line-through; }
+
+  @keyframes up { from{opacity:0;transform:translateY(9px)} to{opacity:1;transform:translateY(0)} }
+
+  .c-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .c-course { font-size: 0.55rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
+
+  .pill { font-size: 0.52rem; font-weight: 500; padding: 3px 9px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; letter-spacing: 0.07em; }
+  .p-zeroed  { background: #fdf0ee; color: var(--fire);    border: 1px solid #f5c5bf; }
+  .p-missing { background: #f9f0fb; color: var(--missing); border: 1px solid #d9aee8; }
+  .p-fire    { background: rgba(255,92,92,0.12);   color: var(--fire);    border: 1px solid rgba(255,92,92,0.3); }
+  .p-soon    { background: rgba(255,144,64,0.12);  color: var(--soon);    border: 1px solid rgba(255,144,64,0.3); }
+  .p-ok      { background: rgba(245,200,66,0.12);  color: var(--ok);      border: 1px solid rgba(245,200,66,0.3); }
+  .p-chill   { background: rgba(62,207,142,0.1);   color: var(--chill);   border: 1px solid rgba(62,207,142,0.25); }
+  .p-done    { background: var(--surface2);         color: var(--muted);   border: 1px solid var(--border); }
+  .p-student { background: rgba(245,166,35,0.12);  color: var(--student); border: 1px solid rgba(245,166,35,0.3); }
+
+  .c-title { font-family: var(--serif); font-weight: 300; font-size: 1rem; line-height: 1.35; color: var(--ink); }
+  .c-meta { font-size: 0.59rem; color: var(--subink); display: flex; flex-direction: column; gap: 3px; }
+  .c-countdown { font-size: 0.67rem; font-weight: 500; margin-top: 2px; }
+  .cd-missing { color: var(--missing); }
+  .cd-fire { color: var(--fire); }
+  .cd-soon { color: var(--soon); }
+  .cd-ok   { color: var(--ok); }
+  .cd-chill{ color: var(--chill); }
+
+  /* Student checked indicator on card */
+  .student-checked-badge {
+    font-size: 0.55rem; color: var(--student); background: rgba(245,166,35,0.1);
+    border: 1px solid rgba(245,166,35,0.25); border-radius: 10px; padding: 2px 8px;
+    display: inline-flex; align-items: center; gap: 4px; margin-top: 2px;
+  }
+
+  .source-badge { font-size: 0.5rem; padding: 2px 7px; border-radius: 10px; letter-spacing: 0.06em; display: inline-block; margin-top: 2px; }
+  .sb-api  { background: rgba(62,207,142,0.1); color: var(--chill); border: 1px solid rgba(62,207,142,0.2); }
+  .sb-ical { background: rgba(91,141,238,0.1); color: var(--accent); border: 1px solid rgba(91,141,238,0.2); }
+
+  .c-actions { display: flex; gap: 7px; margin-top: 2px; }
+  .nudge-btn { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 8px 10px; font-family: var(--mono); font-size: 0.6rem; color: var(--subink); cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 5px; justify-content: center; }
+  .nudge-btn:hover:not(:disabled) { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .nudge-btn.nb-missing:hover:not(:disabled) { background: var(--missing); border-color: var(--missing); }
+  .nudge-btn:disabled { opacity: 0.35; cursor: default; }
+  .nudge-btn.nb-sent { background: rgba(62,207,142,0.12); color: var(--chill); border-color: rgba(62,207,142,0.3); }
+
+  .done-btn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 7px 12px; font-family: var(--mono); font-size: 0.6rem; color: var(--subink); cursor: pointer; transition: all 0.15s; white-space: nowrap; font-weight: 500; }
+  .done-btn:hover { border-color: var(--chill); color: var(--chill); background: #eef7f3; }
+  .done-btn.db-checked { background: #eef7f3; color: var(--chill); border-color: #b0d8c8; }
+
+  .date-header {
+    grid-column: 1 / -1;
+    font-size: 0.62rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--subink);
+    padding: 16px 2px 6px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2px;
+  }
+  .date-header:first-child { padding-top: 0; }
+
+  #empty { display:none; grid-column:1/-1; text-align:center; padding:80px 20px; color:var(--muted); }
+  #empty .big { font-family:var(--serif); font-style:italic; font-size:2.8rem; margin-bottom:10px; }
+  #empty p { font-size:0.65rem; line-height:1.75; }
+  #loading { display:none; grid-column:1/-1; padding:60px; text-align:center; color:var(--muted); font-size:0.65rem; letter-spacing:0.12em; }
+  .pulse { animation:pulse 1.3s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:0.25} 50%{opacity:1} }
+
+  #toast { position:fixed; bottom:22px; right:22px; background:var(--ink); color:var(--bg); border:1px solid var(--border2); padding:11px 18px; border-radius:8px; font-size:0.65rem; opacity:0; transform:translateY(10px); transition:all 0.25s; pointer-events:none; z-index:100; max-width:300px; }
+  #toast.show { opacity:1; transform:translateY(0); }
+  #toast.t-err { background:rgba(255,92,92,0.15); border-color:rgba(255,92,92,0.4); color:var(--fire); }
+  #toast.t-ok  { background:rgba(62,207,142,0.12); border-color:rgba(62,207,142,0.35); color:var(--chill); }
+
+  /* Modals */
+  .modal-bg { display:none; position:fixed; inset:0; background:rgba(26,22,16,0.55); z-index:200; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); }
+  .modal-bg.open { display:flex; }
+  .modal { background:var(--surface); border:1px solid var(--border2); border-radius:14px; max-width:620px; width:100%; max-height:88vh; overflow-y:auto; padding:34px; position:relative; }
+  .modal h2 { font-family:var(--serif); font-weight:300; font-style:italic; font-size:1.55rem; margin-bottom:5px; }
+  .modal-sub { font-size:0.62rem; color:var(--subink); margin-bottom:22px; line-height:1.65; }
+  .modal-close { position:absolute; top:14px; right:14px; background:none; border:1px solid var(--border); border-radius:6px; padding:4px 10px; font-family:var(--mono); font-size:0.58rem; color:var(--subink); cursor:pointer; }
+  .modal-close:hover { border-color:var(--border2); color:var(--ink); }
+
+  .step { display:flex; gap:13px; margin-bottom:17px; align-items:flex-start; }
+  .sn { background:var(--accent); color:#fff; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-size:0.6rem; font-weight:500; flex-shrink:0; margin-top:1px; }
+  .sn.purple { background:var(--missing); }
+  .sn.orange { background:var(--student); }
+  .sb { flex:1; }
+  .sb strong { font-size:0.73rem; display:block; margin-bottom:4px; color:var(--ink); }
+  .sb p { font-size:0.62rem; color:var(--subink); line-height:1.65; }
+  .sb a { color:var(--accent); text-decoration:none; }
+  .sb code { background:var(--bg); border:1px solid var(--border); border-radius:4px; padding:2px 7px; font-size:0.59rem; color:var(--ink); display:inline-block; margin-top:4px; word-break:break-all; }
+  .sb pre { background:var(--bg); border:1px solid var(--border); border-radius:7px; padding:11px 13px; font-size:0.59rem; color:var(--ink); margin-top:8px; line-height:1.75; overflow-x:auto; white-space:pre-wrap; word-break:break-word; }
+
+  .callout { border-radius:8px; padding:11px 13px; font-size:0.61rem; line-height:1.65; margin:10px 0; }
+  .c-blue   { background:#f0f5ff; border:1px solid #c5d3f0; color:#2d4080; }
+  .c-purple { background:#f9f0fb; border:1px solid #d9aee8; color:#5a1a6b; }
+  .c-green  { background:#eef7f3; border:1px solid #b0d8c8; color:#1a5c3d; }
+  .c-orange { background:#fffbf0; border:1px solid #f0d090; color:#7a4800; }
+  .divider  { height:1px; background:var(--border); margin:18px 0; }
+
+  .tabs { display:flex; gap:0; margin-bottom:20px; border-bottom:1px solid var(--border); }
+  .tab-btn { background:none; border:none; border-bottom:2px solid transparent; padding:8px 14px; font-family:var(--mono); font-size:0.6rem; color:var(--muted); cursor:pointer; transition:all 0.15s; margin-bottom:-1px; }
+  .tab-btn.active { color:var(--ink); border-bottom-color:var(--accent); }
+  .tab-pane { display:none; }
+  .tab-pane.active { display:block; }
+
+  @media(max-width:720px) { .shell{grid-template-columns:1fr} aside{position:static;height:auto} }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside>
+  <div class="wordmark">
+    <h1>Nudge <strong>HQ</strong></h1>
+    <p>Lakota Canvas · Parent Dashboard</p>
+  </div>
+
+  <!-- Canvas -->
+  <div class="s-section">
+    <div class="s-label">Canvas Connection</div>
+    <div class="canvas-domain">🏫 lakota.instructure.com <span>● confirmed</span></div>
+    <div class="field"><label>Proxy URL</label><input type="text" id="proxy-url" placeholder="https://your-proxy.up.railway.app"></div>
+    <div class="field"><label>Student API Token</label><input type="password" id="api-token" placeholder="Paste token from Canvas settings…"></div>
+    <div class="field"><label>Student name (for texts)</label><input type="text" id="student-name" placeholder="e.g. Ethan"></div>
+    <button class="btn btn-primary" onclick="loadCanvas()">🔄 Load from Canvas API</button>
+    <button class="btn btn-secondary" onclick="loadDemo()">Try Demo Data</button>
+    <p class="hint">Token: Canvas → Account → Settings → Approved Integrations → + New Access Token. <button class="ilink" onclick="openModal('token-modal')">Guide →</button></p>
+  </div>
+
+  <!-- Firebase -->
+  <div class="s-section">
+    <div class="s-label">Student Sync (Firebase)</div>
+    <div id="fb-status" class="fb-status disconnected"><span class="fb-dot"></span> Not connected</div>
+    <div class="field"><label>Firebase Database URL</label><input type="url" id="fb-url" placeholder="https://your-project-default-rtdb.firebaseio.com"></div>
+    <div class="field"><label>Firebase API Key</label><input type="text" id="fb-key" placeholder="AIzaSy…"></div>
+    <button class="btn btn-orange" onclick="connectFirebase()">🔗 Connect Firebase</button>
+    <p class="hint">Share these two values with his device too. <button class="ilink" onclick="openModal('firebase-modal')">Firebase setup guide →</button></p>
+  </div>
+
+  <!-- Twilio -->
+  <div class="s-section">
+    <div class="s-label">Twilio SMS</div>
+    <div class="field"><label>Account SID</label><input type="text" id="tw-sid" placeholder="ACxxxxxxxxxxxxxxxx"></div>
+    <div class="field"><label>Auth Token</label><input type="password" id="tw-token" placeholder="your auth token"></div>
+    <div class="field"><label>Your Twilio Number</label><input type="tel" id="tw-from" placeholder="+15551234567"></div>
+    <div class="field"><label>His Phone Number</label><input type="tel" id="tw-to" placeholder="+15559876543"></div>
+    <p class="hint"><button class="ilink" onclick="openModal('twilio-modal')">Twilio setup guide →</button></p>
+    <p class="hint" style="margin-top:8px;color:var(--chill)">🔒 All credentials auto-save in your browser. <button class="ilink" style="color:var(--muted)" onclick="clearCreds()">Clear saved data →</button></p>
+  </div>
+
+  <!-- Stats -->
+  <div class="s-section">
+    <div class="s-label">At a Glance</div>
+    <div class="stat-grid">
+      <div class="stat-box s-missing"><div class="stat-num" id="s-missing">—</div><div class="stat-lbl">Missing</div></div>
+      <div class="stat-box s-fire">   <div class="stat-num" id="s-fire">—</div>   <div class="stat-lbl">Due Today</div></div>
+      <div class="stat-box s-student"><div class="stat-num" id="s-checked">—</div><div class="stat-lbl">He Checked Off</div></div>
+      <div class="stat-box">          <div class="stat-num" id="s-nudged">0</div>  <div class="stat-lbl">Nudges Sent</div></div>
+    </div>
+  </div>
+
+  <div>
+    <button class="guide-btn" onclick="openModal('firebase-modal')">🔥 Firebase Setup Guide →</button>
+    <button class="guide-btn" onclick="openModal('make-modal')">⚙️ Make.com Auto-Reminder Guide →</button>
+    <button class="guide-btn" onclick="openModal('token-modal')">🔑 How to get your API token →</button>
+    <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
+      <button class="btn btn-primary" onclick="showQR('parent')">📱 Set Up on My Phone</button>
+      <button class="btn btn-secondary" onclick="showQR('student')">📱 Set Up His Phone</button>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<main>
+  <div class="main-top">
+    <h2>Assignments</h2>
+    <span class="last-sync" id="last-sync">Not yet synced</span>
+  </div>
+
+  <div class="chips">
+    <span class="chip active"     onclick="setFilter('all',this)">All</span>
+    <span class="chip c-missing"  onclick="setFilter('missing',this)">⚠️ Missing</span>
+    <span class="chip c-fire"     onclick="setFilter('fire',this)">🔴 Due Today</span>
+    <span class="chip"            onclick="setFilter('soon',this)">🟠 This Week</span>
+    <span class="chip c-student"  onclick="setFilter('student-done',this)">✅ He Checked Off</span>
+    <span class="chip"            onclick="setFilter('done',this)">✓ Confirmed Done</span>
+  </div>
+
+  <!-- Missing banner -->
+  <div id="missing-banner">
+    <div class="mb-text" style="flex:1">
+      <strong id="mb-title">⚠️ Missing assignments detected</strong>
+      <span id="mb-sub">These are officially unsubmitted in Canvas.</span>
+    </div>
+    <button class="mb-btn" id="mb-btn" onclick="nudgeAllMissing()">📲 Text all missing</button>
+  </div>
+
+  <!-- Student checked banner -->
+  <div id="student-banner">
+    <strong id="sb-title">✅ He checked off some assignments</strong>
+    <span id="sb-sub">These are marked done on his device — confirm when you've verified submission in Canvas.</span>
+  </div>
+
+  <div id="grid">
+    <div id="loading"><span class="pulse">Connecting to Canvas…</span></div>
+    <div id="empty"><div class="big">🎒</div><p>No assignments to show.<br>Load from Canvas API or try demo data.</p></div>
+  </div>
+</main>
+</div>
+
+<div id="toast"></div>
+
+<!-- ═══ TOKEN MODAL ═══ -->
+<div class="modal-bg" id="token-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('token-modal')">✕ Close</button>
+    <h2>Getting Your API Token</h2>
+    <p class="modal-sub">2 minutes. Use your parent observer account.</p>
+    <div class="step"><div class="sn">1</div><div class="sb"><strong>Log into your observer account</strong><p>Go to <a href="https://lakota.instructure.com" target="_blank">lakota.instructure.com</a> with your parent credentials.</p></div></div>
+    <div class="step"><div class="sn">2</div><div class="sb"><strong>Open Account Settings</strong><p>Click your profile picture or initials → <strong>Settings</strong>.</p></div></div>
+    <div class="step"><div class="sn">3</div><div class="sb"><strong>Find Approved Integrations</strong><p>Scroll down → <strong>+ New Access Token</strong>. Name it "Nudge HQ", leave expiry blank → <strong>Generate Token</strong>.</p></div></div>
+    <div class="step"><div class="sn">4</div><div class="sb"><strong>Copy immediately</strong><p>Canvas shows the token <strong>only once</strong>. Copy it now and paste into the sidebar.</p></div></div>
+    <div class="callout c-orange">⚠️ Treat this like a password. It gives read access to Canvas data visible from your observer account.</div>
+    <button class="btn btn-primary" onclick="closeModal('token-modal')">Got it</button>
+  </div>
+</div>
+
+<!-- ═══ FIREBASE MODAL ═══ -->
+<div class="modal-bg" id="firebase-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('firebase-modal')">✕ Close</button>
+    <h2>Firebase Setup</h2>
+    <p class="modal-sub">This lets his check-offs sync instantly to your parent view. Free Google account required. Takes about 10 minutes.</p>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('fb-setup')">Setup</button>
+      <button class="tab-btn"        onclick="switchTab('fb-share')">Share with His Device</button>
+    </div>
+
+    <div class="tab-pane active" id="tab-fb-setup">
+      <div class="step"><div class="sn orange">1</div><div class="sb"><strong>Go to Firebase Console</strong><p>Visit <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> and sign in with your Google account.</p></div></div>
+      <div class="step"><div class="sn orange">2</div><div class="sb"><strong>Create a new project</strong><p>Click <strong>Add project</strong> → name it "NudgeHQ" → disable Google Analytics (not needed) → <strong>Create project</strong>.</p></div></div>
+      <div class="step"><div class="sn orange">3</div><div class="sb"><strong>Add a Realtime Database</strong><p>In the left sidebar → <strong>Build → Realtime Database → Create Database</strong>. Choose <strong>United States</strong> location. Select <strong>Start in test mode</strong> (allows read/write for 30 days — you can lock it down later).</p></div></div>
+      <div class="step"><div class="sn orange">4</div><div class="sb">
+        <strong>Copy your Database URL</strong>
+        <p>After creation you'll see a URL like:</p>
+        <code>https://nudgehq-default-rtdb.firebaseio.com</code>
+        <p style="margin-top:6px;">Copy this into the <strong>Firebase Database URL</strong> field in the sidebar.</p>
+      </div></div>
+      <div class="step"><div class="sn orange">5</div><div class="sb"><strong>Get your API Key</strong><p>In Firebase Console → click the ⚙️ gear icon → <strong>Project Settings</strong>. Under "Your apps", click the <strong>&lt;/&gt;</strong> (web) icon to register a web app. Name it "NudgeHQ". Copy the <code>apiKey</code> value from the config snippet shown.</p></div></div>
+      <div class="step"><div class="sn orange">6</div><div class="sb"><strong>Paste both into the sidebar</strong><p>Enter the Database URL and API Key in the sidebar fields, then click <strong>Connect Firebase</strong>. You should see the status turn green.</p></div></div>
+      <div class="callout c-green">✅ Once connected, his check-offs will appear on your dashboard in real time — no refreshing needed.</div>
+    </div>
+
+    <div class="tab-pane" id="tab-fb-share">
+      <div class="callout c-orange">Share these two values with his device so his checklist app can sync to the same database.</div>
+      <div class="step"><div class="sn orange">1</div><div class="sb"><strong>Open his student checklist file</strong><p>The file is called <strong>nudgehq-student.html</strong>. Open it in a browser on his phone or computer.</p></div></div>
+      <div class="step"><div class="sn orange">2</div><div class="sb"><strong>Tap the ⚙ settings button</strong><p>In the top-right corner of his checklist. This opens the setup panel.</p></div></div>
+      <div class="step"><div class="sn orange">3</div><div class="sb">
+        <strong>Enter the same Firebase values</strong>
+        <p>He'll need the same two things you put in the parent dashboard:</p>
+        <code>Database URL: https://nudgehq-default-rtdb.firebaseio.com</code>
+        <code style="margin-top:6px;">API Key: AIzaSy…</code>
+      </div></div>
+      <div class="step"><div class="sn orange">4</div><div class="sb"><strong>Enter his Canvas iCal URL too</strong><p>In Canvas → Calendar → scroll to bottom → Calendar Feed. Copy the link and paste it into the iCal field in his settings panel.</p></div></div>
+      <div class="step"><div class="sn orange">5</div><div class="sb"><strong>Tap Save & Load</strong><p>His assignments will appear. Any time he checks one off, it syncs instantly to your parent dashboard.</p></div></div>
+      <div class="callout c-blue">💡 Tip: Save both HTML files to a shared folder (Google Drive, iCloud Drive) so you can both access them easily from any device.</div>
+    </div>
+    <div style="margin-top:20px;"><button class="btn btn-orange" onclick="closeModal('firebase-modal')">Got it</button></div>
+  </div>
+</div>
+
+<!-- ═══ TWILIO MODAL ═══ -->
+<div class="modal-bg" id="twilio-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('twilio-modal')">✕ Close</button>
+    <h2>Twilio SMS Setup</h2>
+    <p class="modal-sub">One-time setup, ~10 minutes. Free trial included.</p>
+    <div class="step"><div class="sn">1</div><div class="sb"><strong>Create a free account</strong><p><a href="https://www.twilio.com/try-twilio" target="_blank">twilio.com/try-twilio</a> — no credit card needed.</p></div></div>
+    <div class="step"><div class="sn">2</div><div class="sb"><strong>Get a free phone number</strong><p>Console → Phone Numbers → Manage → Buy a Number. Filter by SMS.</p></div></div>
+    <div class="step"><div class="sn">3</div><div class="sb"><strong>Verify his number (trial only)</strong><p>Phone Numbers → Verified Caller IDs → add his number. One-time confirmation code.</p></div></div>
+    <div class="step"><div class="sn">4</div><div class="sb"><strong>Copy Account SID and Auth Token</strong><p>Both on your <a href="https://console.twilio.com" target="_blank">Twilio Console</a> homepage.</p><code>SID: ACxxxxxxxxxxxxxxxxxxxx</code></div></div>
+    <div class="callout c-blue">🔒 Credentials stay in your browser only — sent directly to Twilio when you tap a nudge button.</div>
+    <button class="btn btn-primary" onclick="closeModal('twilio-modal')">Got it</button>
+  </div>
+</div>
+
+<!-- ═══ MAKE.COM MODAL ═══ -->
+<div class="modal-bg" id="make-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('make-modal')">✕ Close</button>
+    <h2>Make.com Auto-Reminder</h2>
+    <p class="modal-sub">Sends automatic morning texts from real Canvas API data. Free Make.com account, ~20 min setup.</p>
+    <div class="step"><div class="sn purple">1</div><div class="sb"><strong>Schedule Trigger</strong><p>Make.com → New Scenario → Schedule → Every Day at your chosen time.</p></div></div>
+    <div class="step"><div class="sn purple">2</div><div class="sb"><strong>HTTP: Fetch missing submissions</strong><pre>URL: https://lakota.instructure.com/api/v1/users/STUDENT_ID/missing_submissions
+Method: GET
+Headers:
+  Authorization: Bearer YOUR_OBSERVER_TOKEN
+Query: filter[]=submittable</pre></div></div>
+    <div class="step"><div class="sn purple">3</div><div class="sb"><strong>Iterator → loop each missing item</strong><p>Flow Control → Iterator on the response array.</p></div></div>
+    <div class="step"><div class="sn purple">4</div><div class="sb"><strong>Firebase: check if he already marked it done</strong><p>HTTP → GET <code>https://YOUR-DB.firebaseio.com/nhq_checked/{{id}}.json?auth=YOUR_KEY</code>. If result is <code>true</code>, skip with a Filter.</p></div></div>
+    <div class="step"><div class="sn purple">5</div><div class="sb"><strong>Twilio: Send SMS</strong><p>Connect Twilio → Send an SMS. Use message template below.</p></div></div>
+    <div class="callout c-purple">
+      <strong>Message template:</strong><br>
+      Hey! Just checking in 💙 It looks like "{{name}}" hasn't been submitted in Canvas yet. No stress — you've totally got this. We're here if you need help! ❤️
+    </div>
+    <div class="callout c-green">✅ Step 4 means if he's already checked it off on his device, Make.com will skip texting about it. His check-offs actually reduce your noise.</div>
+    <button class="btn btn-purple" onclick="closeModal('make-modal')">Got it</button>
+  </div>
+</div>
+
+<!-- QR Code Modal -->
+<div class="modal-bg" id="qr-modal">
+  <div class="modal" style="max-width:420px;text-align:center">
+    <button class="modal-close" onclick="closeModal('qr-modal')">✕ Close</button>
+    <h2 id="qr-title">Setup QR Code</h2>
+    <p class="modal-sub" id="qr-desc">Scan this with your phone to auto-fill all settings.</p>
+    <div id="qr-code" style="display:flex;justify-content:center;margin:20px 0"></div>
+    <div class="callout c-blue" id="qr-instructions"></div>
+    <div style="margin-top:16px">
+      <button class="btn btn-primary" onclick="closeModal('qr-modal')">Done</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+const DOMAIN = 'https://lakota.instructure.com';
+let assignments  = [];
+let studentChecked = {}; // from Firebase
+let parentDone   = JSON.parse(localStorage.getItem('nhq_parent_done') || '{}');
+let nudgeCount   = parseInt(localStorage.getItem('nhq_nudges') || '0');
+let activeFilter = 'all';
+let firebaseDb   = null;
+
+// ══════════════════════════════════════
+// FIREBASE
+// ══════════════════════════════════════
+window.connectFirebase = async function() {
+  const url = document.getElementById('fb-url').value.trim();
+  const key = document.getElementById('fb-key').value.trim();
+  if (!url || !key) { showToast('Enter both Firebase URL and API Key.', 'err'); return; }
+
+  try {
+    const { initializeApp }                  = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const { getDatabase, ref, onValue }      = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+
+    const app = initializeApp({ apiKey: key, databaseURL: url }, 'parent-app');
+    const db  = getDatabase(app);
+    firebaseDb = true;
+
+    // Listen for student check-offs in real time
+    onValue(ref(db, 'nhq_checked'), snap => {
+      studentChecked = snap.val() || {};
+      updateFbStatus(true);
+      renderAll();
+      showToast('Student check-offs synced ✓', 'ok');
+    });
+
+    localStorage.setItem('nhq_fb_url', url);
+    localStorage.setItem('nhq_fb_key', key);
+    showToast('Firebase connected!', 'ok');
+  } catch(e) {
+    showToast('Firebase error: ' + e.message, 'err');
+  }
+};
+
+function updateFbStatus(on) {
+  const el = document.getElementById('fb-status');
+  el.className = `fb-status ${on?'connected':'disconnected'}`;
+  el.innerHTML = `<span class="fb-dot"></span> ${on ? 'Connected — syncing live' : 'Not connected'}`;
+}
+
+// Restore saved Firebase on load
+(async function tryRestoreFirebase() {
+  const url = localStorage.getItem('nhq_fb_url');
+  const key = localStorage.getItem('nhq_fb_key');
+  if (url && key) {
+    document.getElementById('fb-url').value = url;
+    document.getElementById('fb-key').value = key;
+    // Auto-connect
+    setTimeout(() => window.connectFirebase && window.connectFirebase(), 500);
+  }
+})();
+
+// ══════════════════════════════════════
+// CANVAS API
+// ══════════════════════════════════════
+window.loadCanvas = async function() {
+  const token = document.getElementById('api-token').value.trim();
+  if (!token) { showToast('Paste your Canvas API token first.', 'err'); openModal('token-modal'); return; }
+  showLoading(true);
+  try {
+    // Use student token directly — calls API as the student (self)
+    const profileRes = await canvasFetch('/api/v1/users/self/profile', token);
+    if (!profileRes.ok) throw new Error('Auth failed (' + profileRes.status + '). Check the token.');
+    const profile = await profileRes.json();
+    const sid = 'self';
+    console.log('Loaded as student:', profile.name || profile.login_id || sid);
+
+    const [missingRes, upRes, plannerRes, coursesForZeroRes] = await Promise.all([
+      canvasFetch('/api/v1/users/self/missing_submissions?filter[]=submittable&per_page=50', token),
+      canvasFetch('/api/v1/users/self/upcoming_events?per_page=50', token),
+      canvasFetch('/api/v1/planner/items?per_page=50&filter=new_activity', token),
+      canvasFetch('/api/v1/users/self/courses?enrollment_state=active&per_page=50', token),
+    ]);
+
+    const missingRaw = missingRes.ok ? await missingRes.json() : [];
+
+    // upcoming_events returns assignments with a different shape — normalize it
+    let upRaw = [];
+    if (upRes.ok) {
+      const upEvents = await upRes.json();
+      upRaw = upEvents
+        .filter(e => e.type === 'Assignment' || e.assignment)
+        .map(e => {
+          const a = e.assignment || e;
+          const title = a.name || a.title || e.title || e.description || null;
+          // Skip if we only have a numeric-looking title (assignment ID leaked through)
+          if (!title || /^\d+$/.test(String(title))) return null;
+          return {
+            id:               a.id || e.id,
+            name:             title,
+            course_id:        a.course_id || e.course_id || null,
+            due_at:           a.due_at || e.start_at || null,
+            points_possible:  a.points_possible || null,
+          };
+        }).filter(Boolean);
+    }
+
+    // Also pull from planner as a fallback/supplement
+    if (upRaw.length === 0 && plannerRes.ok) {
+      const plannerItems = await plannerRes.json();
+      upRaw = plannerItems
+        .filter(p => p.plannable_type === 'assignment' && p.plannable)
+        .map(p => ({
+          id:              p.plannable_id,
+          name:            p.plannable.title || 'Untitled',
+          course_id:       p.course_id || null,
+          due_at:          p.plannable_date || p.plannable.due_at || null,
+          points_possible: p.plannable.points_possible || null,
+        }));
+    }
+    const missingIds = new Set(missingRaw.map(a=>String(a.id)));
+    const seen       = new Set();
+    assignments      = [];
+
+    missingRaw.forEach(a => {
+      const id = String(a.id);
+      if (seen.has(id)) return; // skip duplicates
+      seen.add(id);
+      assignments.push({
+        id, title: a.name||'Untitled',
+        course: 'Course ' + a.course_id,
+        due:    a.due_at ? new Date(a.due_at) : null,
+        status: 'missing',
+        points: a.points_possible || null,
+        source: 'api',
+      });
+    });
+    // Only show assignments due after Aug 1 of current academic year (filters last year)
+    const now2 = new Date();
+    const academicYearStart = new Date(now2.getMonth() >= 7
+      ? now2.getFullYear() : now2.getFullYear() - 1, 7, 1); // Aug 1
+    upRaw.forEach(a => {
+      const id = String(a.id);
+      if (seen.has(id)) return; // skip duplicates and already-missing items
+      const due = a.due_at ? new Date(a.due_at) : null;
+      if (!due || due < academicYearStart) return;
+      seen.add(id);
+      assignments.push({
+        id, title: a.name||'Untitled',
+        course: 'Course ' + (a.course_id || ''),
+        due,
+        status: 'upcoming',
+        points: a.points_possible || null,
+        source: 'api',
+      });
+    });
+
+    // ── Zero detection: graded assignments with score=0 and no submission ──
+    if (coursesForZeroRes.ok) {
+      try {
+        const activeCourses = await coursesForZeroRes.json();
+        const zeroChecks = activeCourses.map(c =>
+          canvasFetch(
+            '/api/v1/courses/' + c.id +
+            '/students/submissions?student_ids[]=self&workflow_state=graded&per_page=50&include[]=assignment', token
+          )
+        );
+        const zeroResults = await Promise.all(zeroChecks);
+        for (let i = 0; i < zeroResults.length; i++) {
+          if (!zeroResults[i].ok) continue;
+          const subs = await zeroResults[i].json();
+          subs.forEach(sub => {
+            // Flag if: score is 0, never submitted, graded by a real person
+            const isZero        = sub.score === 0 || sub.score === null;
+            const neverSubmitted = !sub.submitted_at;
+            const wasGraded     = sub.grader_id && sub.grader_id > 0;
+            const alreadyListed = seen.has(String(sub.assignment_id));
+            if (isZero && neverSubmitted && wasGraded && !alreadyListed && !seen.has(String(sub.assignment_id))) {
+              const zeroTitle = (sub.assignment && (sub.assignment.name || sub.assignment.title))
+                ? (sub.assignment.name || sub.assignment.title)
+                : null;
+              if (!zeroTitle) return; // skip if we can't get the name
+              seen.add(String(sub.assignment_id));
+              assignments.push({
+                id:      String(sub.assignment_id),
+                title:   zeroTitle,
+                course:  'Course ' + activeCourses[i].id,
+                due:     sub.assignment && sub.assignment.due_at ? new Date(sub.assignment.due_at) : null,
+                status:  'zeroed',
+                score:   sub.score,
+                grade:   sub.grade,
+                points:  sub.assignment ? sub.assignment.points_possible : null,
+                source:  'api',
+              });
+            }
+          });
+        }
+      } catch(e) { console.warn('Zero detection error:', e.message); }
+    }
+
+    // Enrich course names for all assignments
+    await enrichCourseNames(token);
+
+    assignments.sort((a, b) => {
+      // Sort order: zeroed → missing → upcoming by date
+      const order = { zeroed: 0, missing: 1, upcoming: 2 };
+      const ao = order[a.status] ?? 2;
+      const bo = order[b.status] ?? 2;
+      if (ao !== bo) return ao - bo;
+      const aDate = a.due || new Date(9e15);
+      const bDate = b.due || new Date(9e15);
+      return aDate - bDate;
+    });
+
+    document.getElementById('last-sync').textContent = `Synced · ${fmtTime(new Date())}`;
+    renderAll();
+    showToast(`Loaded ${assignments.length} assignments ✓`, 'ok');
+  } catch(e) { showToast('Error: ' + e.message, 'err'); }
+  showLoading(false);
+};
+
+async function canvasFetch(path, token) {
+  const proxyBase = (document.getElementById('proxy-url').value.trim() || '').replace(/\/$/, '');
+  if (!proxyBase) { showToast('Enter your Railway proxy URL first.', 'err'); throw new Error('No proxy URL'); }
+  return fetch(proxyBase + path, { headers: { 'Authorization': 'Bearer ' + token } });
+}
+
+async function enrichCourseNames(token) {
+  try {
+    const res = await canvasFetch('/api/v1/users/self/courses?enrollment_state=active&per_page=50', token);
+    if (!res.ok) return;
+    const courses = await res.json();
+    const map = {};
+    courses.forEach(c => {
+      map[String(c.id)] = c.name || c.course_code || ('Course ' + c.id);
+    });
+    assignments.forEach(a => {
+      // Handle both "Course 12345" format and raw number strings
+      const cid = String(a.course).replace(/^Course\s+/, '').trim();
+      if (map[cid]) a.course = map[cid];
+    });
+  } catch(e) { console.warn('Course name enrichment failed:', e.message); }
+}
+
+// ══════════════════════════════════════
+// DEMO
+// ══════════════════════════════════════
+function off(d,h,m) { const x=new Date(); x.setDate(x.getDate()+d); x.setHours(h,m,0,0); return x; }
+window.loadDemo = function() {
+  assignments = [
+    { id:'d1', title:'Algebra Ch. 7 Problem Set',          course:'Math 10',    due:off(-3,23,59), status:'missing',  points:20,  source:'api' },
+    { id:'d2', title:'Reading Response — Of Mice and Men', course:'English 10', due:off(-1,8,0),   status:'missing',  points:15,  source:'api' },
+    { id:'d3', title:'Lab Report: Photosynthesis',         course:'Biology',    due:off(0,23,59),  status:'upcoming', points:50,  source:'api' },
+    { id:'d4', title:'Spanish Vocab Quiz (Unit 5)',        course:'Spanish II', due:off(1,10,0),   status:'upcoming', points:25,  source:'api' },
+    { id:'d5', title:'History Essay Outline',              course:'US History', due:off(5,23,59),  status:'upcoming', points:30,  source:'api' },
+    { id:'d6', title:'Art Project — Self Portrait',       course:'Studio Art', due:off(10,23,59), status:'upcoming', points:100, source:'api' },
+  ];
+  // Simulate he checked one off
+  studentChecked = { d3: true };
+  document.getElementById('last-sync').textContent = 'Demo data loaded';
+  renderAll();
+  showToast('Demo loaded — check the "He Checked Off" filter!', 'ok');
+};
+
+// ══════════════════════════════════════
+// URGENCY
+// ══════════════════════════════════════
+function urgency(a) {
+  if (a.status==='zeroed')  return 'zeroed';
+  if (a.status==='missing') return 'missing';
+  if (!a.due) return 'chill';
+  const h = (a.due-new Date())/3600000;
+  if (h<=24)  return 'fire';
+  if (h<=168) return 'soon';
+  if (h<=336) return 'ok';
+  return 'chill';
+}
+function countdown(a) {
+  if (a.status==='zeroed')  return 'Graded as zero — never submitted';
+  if (a.status==='missing') {
+    if (!a.due) return 'Officially missing in Canvas';
+    const h = Math.abs(Math.floor((a.due - new Date()) / 3600000));
+    const overdue = h < 24 ? h + 'h overdue' : Math.floor(h/24) + 'd overdue';
+    return overdue + ' · officially missing';
+  }
+  if (!a.due) return 'No due date';
+  const diff = a.due - new Date();
+  if (diff < 0) {
+    const h = Math.abs(Math.floor(diff / 3600000));
+    return h < 24 ? h + 'h overdue' : Math.floor(h/24) + 'd overdue';
+  }
+  const h = Math.floor(diff / 3600000);
+  if (h < 1)  return 'Due in under an hour';
+  if (h < 24) return 'Due in ' + h + 'h';
+  const d = Math.floor(h/24), rh = h%24;
+  return rh > 0 ? d + 'd ' + rh + 'h away' : d + ' day' + (d>1?'s':'') + ' away';
+}
+function fmtDate(d) { return d?d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'No due date'; }
+function fmtTime(d) { return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); }
+
+// ══════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════
+function getDateLabel(a) {
+  if (a.status === 'missing') return '⚠️ Missing';
+  if (!a.due) return 'No due date';
+  const now   = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const due   = new Date(a.due.getFullYear(), a.due.getMonth(), a.due.getDate());
+  const diff  = Math.round((due - today) / 86400000);
+  if (diff < 0)  return '⚠️ Overdue';
+  if (diff === 0) return '📅 Today';
+  if (diff === 1) return '📅 Tomorrow';
+  if (diff <= 6)  return '📅 This Week — ' + a.due.toLocaleDateString('en-US', {weekday:'long'});
+  // Group by week after that
+  return '📅 ' + a.due.toLocaleDateString('en-US', {month:'long', day:'numeric'});
+}
+
+function renderAll() { renderBanners(); renderCards(); updateStats(); }
+
+function renderBanners() {
+  // Missing
+  // Exclude anything parent or student has already marked done
+  // Include both truly missing AND zeroed (graded as 0, never submitted)
+  const missing = assignments.filter(a =>
+    (a.status === 'missing' || a.status === 'zeroed') &&
+    !parentDone[a.id] &&
+    studentChecked[a.id] !== true
+  );
+  const mb = document.getElementById('missing-banner');
+  if (missing.length) {
+    mb.classList.add('on');
+    const zeroedCount  = missing.filter(a=>a.status==='zeroed').length;
+    const missingCount = missing.filter(a=>a.status==='missing').length;
+    let bannerTitle = '⚠️ ';
+    if (zeroedCount && missingCount) bannerTitle += zeroedCount + ' graded zero' + (zeroedCount>1?'s':'') + ', ' + missingCount + ' missing';
+    else if (zeroedCount) bannerTitle += zeroedCount + ' assignment' + (zeroedCount>1?'s':'') + ' graded as zero';
+    else bannerTitle += missingCount + ' assignment' + (missingCount>1?'s are':' is') + ' officially missing';
+    document.getElementById('mb-title').textContent = bannerTitle;
+    document.getElementById('mb-sub').textContent   = missing.map(a=>'"'+a.title+'"').join(' · ');
+    document.getElementById('mb-btn').disabled = false;
+    document.getElementById('mb-btn').textContent = '📲 Text all missing';
+  } else { mb.classList.remove('on'); }
+
+  // Student checked
+  const stuChecked = assignments.filter(a=>studentChecked[a.id]===true && a.status!=='missing');
+  const sb = document.getElementById('student-banner');
+  if (stuChecked.length) {
+    sb.classList.add('on');
+    document.getElementById('sb-title').textContent = `✅ He checked off ${stuChecked.length} assignment${stuChecked.length>1?'s':''}`;
+    document.getElementById('sb-sub').textContent   = stuChecked.map(a=>`"${a.title}"`).join(' · ');
+  } else { sb.classList.remove('on'); }
+}
+
+function renderCards() {
+  const grid = document.getElementById('grid');
+  grid.querySelectorAll('.card, .date-header').forEach(c=>c.remove());
+  document.getElementById('empty').style.display = 'none';
+
+  const list = assignments.filter(a => {
+    const u       = urgency(a);
+    const pDone   = parentDone[a.id];
+    const sDone   = studentChecked[a.id]===true;
+    if (activeFilter==='all')          return !pDone;
+    if (activeFilter==='done')         return pDone;
+    if (activeFilter==='missing')      return a.status==='missing' && !pDone;
+    if (activeFilter==='student-done') return sDone && !pDone;
+    return u===activeFilter && a.status!=='missing' && !pDone;
+  });
+
+  if (!list.length) { document.getElementById('empty').style.display='block'; return; }
+
+  // Group by date label
+  let lastDateLabel = null;
+  list.forEach((a,idx) => {
+    const dateLabel = getDateLabel(a);
+    if (dateLabel !== lastDateLabel) {
+      const header = document.createElement('div');
+      header.className = 'date-header';
+      header.textContent = dateLabel;
+      grid.appendChild(header);
+      lastDateLabel = dateLabel;
+    }
+    const u      = urgency(a);
+    const pDone  = parentDone[a.id];
+    const sDone  = studentChecked[a.id]===true;
+    const isMiss = a.status==='missing';
+
+    const pillLabel = { zeroed:'🔴 Graded Zero', missing:'⚠️ Missing', fire:'🔴 Due Today', soon:'🟠 This Week', ok:'🟡 Coming Up', chill:'🟢 Later' }[pDone?'done':u] || '';
+    const pillCls   = { zeroed:'p-zeroed', missing:'p-missing', fire:'p-fire', soon:'p-soon', ok:'p-ok', chill:'p-chill' }[u] || 'p-done';
+
+    const card = document.createElement('div');
+    const isZeroed = a.status === 'zeroed';
+    card.className = `card${isZeroed?' c-zeroed':''}${isMiss?' c-missing':''}${sDone&&!pDone?' c-student-done':''}${pDone?' c-parent-done':''}`;
+    card.style.animationDelay = `${idx*30}ms`;
+    card.innerHTML = `
+      <div class="c-top">
+        <span class="c-course">${esc(a.course)}</span>
+        <span class="pill ${pDone?'p-done':pillCls}">${pDone?'✓ Confirmed done':pillLabel}</span>
+      </div>
+      <div class="c-title">${esc(a.title)}</div>
+      <div class="c-meta">
+        <span>${fmtDate(a.due)}</span>
+        <span class="c-countdown cd-${u}">${countdown(a)}</span>
+        ${a.status==='zeroed'?`<span style="font-size:0.63rem;font-weight:600;color:var(--fire)">Graded: ${a.grade||'0'} / ${a.points||0} pts — never submitted</span>`:a.points?`<span style="font-size:0.56rem;color:var(--muted)">${a.points} pts possible</span>`:''}
+        ${sDone?`<span class="student-checked-badge">✅ He marked this done</span>`:''}
+        <span class="source-badge sb-api">● Live from Canvas API</span>
+      </div>
+      <div class="c-actions">
+        <button class="nudge-btn${isMiss?' nb-missing':''}" id="nb-${a.id}"
+          onclick="sendNudge('${a.id}',${isMiss})" ${pDone?'disabled':''}>
+          📲 ${isMiss?'Text about missing':'Send encouraging text'}
+        </button>
+        <button class="done-btn ${pDone?'db-checked':''}" onclick="toggleParentDone('${a.id}')">
+          ${pDone?'✓ Done':'Mark Done'}
+        </button>
+      </div>`;
+    grid.appendChild(card);
+  }); // end list.forEach
+} // end renderCards
+
+window.setFilter = function(f,el) {
+  activeFilter = f;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderCards();
+};
+
+window.toggleParentDone = async function(id) {
+  const nowDone = !parentDone[id];
+  if (nowDone) parentDone[id] = true;
+  else delete parentDone[id];
+  localStorage.setItem('nhq_parent_done', JSON.stringify(parentDone));
+
+  // Also write to Firebase so his checklist reflects parent check-offs
+  if (firebaseDb) {
+    try {
+      const { getDatabase, ref, set } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+      const db = getDatabase();
+      await set(ref(db, 'nhq_checked/' + id), nowDone);
+      showToast(nowDone ? 'Marked done — synced to his checklist ✓' : 'Unmarked', 'ok');
+    } catch(e) {
+      showToast(nowDone ? 'Marked done locally ✓' : 'Unmarked', 'ok');
+    }
+  } else {
+    showToast(nowDone ? 'Marked done ✓' : 'Unmarked', 'ok');
+  }
+  renderAll();
+};
+
+function updateStats() {
+  const zeroed   = assignments.filter(a=>a.status==='zeroed'&&!parentDone[a.id]);
+  const missing  = assignments.filter(a=>a.status==='missing'&&!parentDone[a.id]&&studentChecked[a.id]!==true);
+  const fire     = assignments.filter(a=>urgency(a)==='fire'&&a.status!=='missing'&&a.status!=='zeroed'&&!parentDone[a.id]);
+  const checked  = Object.values(studentChecked).filter(Boolean).length;
+  document.getElementById('s-missing').textContent = (zeroed.length + missing.length)||'0';
+  document.getElementById('s-fire').textContent    = fire.length||'0';
+  document.getElementById('s-checked').textContent = checked||'0';
+  document.getElementById('s-nudged').textContent  = nudgeCount;
+}
+
+// ══════════════════════════════════════
+// SMS
+// ══════════════════════════════════════
+function getTw() {
+  return { sid:document.getElementById('tw-sid').value.trim(), token:document.getElementById('tw-token').value.trim(), from:document.getElementById('tw-from').value.trim(), to:document.getElementById('tw-to').value.trim() };
+}
+
+window.sendNudge = async function(id, isMissing=false) {
+  const tw = getTw();
+  if (!tw.sid||!tw.token||!tw.from||!tw.to) { showToast('Fill in Twilio credentials first.','err'); openModal('twilio-modal'); return; }
+  const a = assignments.find(x=>x.id===id); if(!a) return;
+  const name = document.getElementById('student-name').value.trim()||'Hey';
+  const msg  = isMissing ? buildMissingMsg(a,name) : buildEncMsg(a,name);
+  const btn  = document.getElementById(`nb-${id}`);
+  btn.disabled=true; btn.textContent='⏳ Sending…';
+  const ok = await twilioSend(tw,msg);
+  if (ok) { btn.textContent='✓ Sent!'; btn.classList.add('nb-sent'); nudgeCount++; localStorage.setItem('nhq_nudges',nudgeCount); document.getElementById('s-nudged').textContent=nudgeCount; showToast('Text sent! 📲','ok'); }
+  else    { btn.disabled=false; btn.textContent=isMissing?'📲 Text about missing':'📲 Send encouraging text'; }
+};
+
+window.nudgeAllMissing = async function() {
+  const tw = getTw();
+  if (!tw.sid||!tw.token||!tw.from||!tw.to) { showToast('Fill in Twilio credentials first.','err'); openModal('twilio-modal'); return; }
+  const missing = assignments.filter(a=>a.status==='missing');
+  if (!missing.length) return;
+  const btn = document.getElementById('mb-btn');
+  btn.disabled=true; btn.textContent='⏳ Sending…';
+  const name = document.getElementById('student-name').value.trim()||'Hey';
+  const list = missing.map(a=>`• "${a.title}" (${a.course})`).join('\n');
+  const msg  = `${name}! Just checking in 💙 A few things are showing as officially missing in Canvas:\n\n${list}\n\nNo stress — you've totally got this. We're here if you need any help! ❤️`;
+  const ok   = await twilioSend(tw,msg);
+  if (ok) { btn.textContent='✓ Sent!'; nudgeCount++; localStorage.setItem('nhq_nudges',nudgeCount); document.getElementById('s-nudged').textContent=nudgeCount; showToast(`Sent combined text for ${missing.length} assignments!`,'ok'); }
+  else    { btn.disabled=false; btn.textContent='📲 Text all missing'; }
+};
+
+async function twilioSend({sid,token,from,to},body) {
+  try {
+    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,{method:'POST',headers:{'Authorization':'Basic '+btoa(`${sid}:${token}`),'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({To:to,From:from,Body:body})});
+    const d   = await res.json();
+    if (d.sid) return true;
+    showToast('Twilio: '+(d.message||'error'),'err'); return false;
+  } catch(e) { showToast('SMS failed: '+e.message,'err'); return false; }
+}
+
+const pick = arr=>arr[Math.floor(Math.random()*arr.length)];
+function buildMissingMsg(a,name) {
+  return `${pick([`${name}! Just checking in 💙`,`Hey ${name} —`,`Hi ${name}!`])} ${pick([`Canvas is officially showing "${a.title}" (${a.course}) as missing.`,`It looks like "${a.title}" hasn't been submitted yet.`])}\n\n${pick(['No stress — even a late submission counts! We\'re here if you need help. ❤️','You\'ve totally got this. Want us to sit down together on it? ❤️'])}`;
+}
+function buildEncMsg(a,name) {
+  const h=a.due?(a.due-new Date())/3600000:999;
+  const urgNote=h<=24?'⚠️ This one is due TODAY!':h<=48?`Due tomorrow — don't forget!`:`Due ${countdown(a)}.`;
+  return `${pick([`Hey ${name}! Just a heads up 💙`,`Quick reminder, ${name} 👋`])}\n\n📚 "${a.title}" (${a.course})\n${urgNote}\n\n${pick(['You\'ve got this — one step at a time. ❤️','We believe in you! ❤️'])}`;
+}
+
+// ══════════════════════════════════════
+// UI
+// ══════════════════════════════════════
+function showLoading(on) { document.getElementById('loading').style.display=on?'block':'none'; }
+let toastT;
+function showToast(msg,type='') { const t=document.getElementById('toast'); t.textContent=msg; t.className=`show t-${type}`; clearTimeout(toastT); toastT=setTimeout(()=>t.className='',3600); }
+window.openModal  = id => document.getElementById(id).classList.add('open');
+window.closeModal = id => document.getElementById(id).classList.remove('open');
+window.switchTab  = name => { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick').includes(`'${name}'`))); document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id===`tab-${name}`)); };
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+document.getElementById('empty').style.display='block';
+updateStats();
+
+// ══════════════════════════════════════
+// PERSIST CREDENTIALS IN LOCALSTORAGE
+// ══════════════════════════════════════
+const CRED_FIELDS = ['proxy-url','api-token','student-name','fb-url','fb-key','tw-sid','tw-token','tw-from','tw-to'];
+
+// Restore saved values on page load
+CRED_FIELDS.forEach(id => {
+  const saved = localStorage.getItem('nhq_cred_' + id);
+  const el    = document.getElementById(id);
+  if (saved && el) el.value = saved;
+});
+
+// Save whenever a field changes
+CRED_FIELDS.forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('change', () => {
+    localStorage.setItem('nhq_cred_' + id, el.value);
+  });
+  // Also save on blur (covers paste events)
+  el.addEventListener('blur', () => {
+    localStorage.setItem('nhq_cred_' + id, el.value);
+  });
+});
+
+// Auto-connect Firebase if credentials were restored
+window.addEventListener('load', () => {
+  const fbUrl = localStorage.getItem('nhq_cred_fb-url');
+  const fbKey = localStorage.getItem('nhq_cred_fb-key');
+  if (fbUrl && fbKey) {
+    setTimeout(() => window.connectFirebase && window.connectFirebase(), 300);
+  }
+});
+
+// Clear all saved credentials
+window.clearCreds = function() {
+  if (!confirm('Clear all saved credentials? You\'ll need to re-enter them.')) return;
+  CRED_FIELDS.forEach(id => localStorage.removeItem('nhq_cred_' + id));
+  CRED_FIELDS.forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  showToast('Credentials cleared.', '');
+};
+
+// Auto-load Canvas if token was restored
+window.addEventListener('load', () => {
+  const token = localStorage.getItem('nhq_cred_api-token');
+  if (token) {
+    setTimeout(() => window.loadCanvas && window.loadCanvas(), 600);
+  }
+});
+</script>
+<script>
+
+</script>
+<script>
+// ══════════════════════════════════════
+// AUTO-FILL FROM QR CODE URL PARAMS
+// ══════════════════════════════════════
+(function readQRParams() {
+  const p = new URLSearchParams(window.location.search);
+  const map = {
+    proxy:   'nhq_cred_proxy-url',
+    token:   'nhq_cred_api-token',
+    fbUrl:   'nhq_cred_fb-url',
+    fbKey:   'nhq_cred_fb-key',
+    twSid:   'nhq_cred_tw-sid',
+    twToken: 'nhq_cred_tw-token',
+    twFrom:  'nhq_cred_tw-from',
+    twTo:    'nhq_cred_tw-to',
+    name:    'nhq_cred_student-name',
+  };
+  let found = false;
+  Object.entries(map).forEach(([param, storageKey]) => {
+    const val = p.get(param);
+    if (val) { localStorage.setItem(storageKey, val); found = true; }
+  });
+  if (found && window.history.replaceState) {
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+})();
+window.showQR = function(type) {
+  const proxyUrl  = localStorage.getItem('nhq_cred_proxy-url')   || '';
+  const token     = localStorage.getItem('nhq_cred_api-token')   || '';
+  const fbUrl     = localStorage.getItem('nhq_cred_fb-url')      || '';
+  const fbKey     = localStorage.getItem('nhq_cred_fb-key')      || '';
+  const twSid     = localStorage.getItem('nhq_cred_tw-sid')      || '';
+  const twToken   = localStorage.getItem('nhq_cred_tw-token')    || '';
+  const twFrom    = localStorage.getItem('nhq_cred_tw-from')     || '';
+  const twTo      = localStorage.getItem('nhq_cred_tw-to')       || '';
+  const studName  = localStorage.getItem('nhq_cred_student-name')|| '';
+
+  const baseUrl = type === 'parent'
+    ? 'https://sascheetz.github.io/nudgehq-site/nudgehq-parent.html'
+    : 'https://sascheetz.github.io/nudgehq-site/student.html';
+
+  const params = new URLSearchParams();
+  if (type === 'parent') {
+    if (proxyUrl) params.set('proxy',   proxyUrl);
+    if (token)    params.set('token',   token);
+    if (fbUrl)    params.set('fbUrl',   fbUrl);
+    if (fbKey)    params.set('fbKey',   fbKey);
+    if (twSid)    params.set('twSid',   twSid);
+    if (twToken)  params.set('twToken', twToken);
+    if (twFrom)   params.set('twFrom',  twFrom);
+    if (twTo)     params.set('twTo',    twTo);
+    if (studName) params.set('name',    studName);
+  } else {
+    if (token) params.set('token', token);
+    if (fbUrl) params.set('fbUrl', fbUrl);
+    if (fbKey) params.set('fbKey', fbKey);
+  }
+
+  const fullUrl = baseUrl + '?' + params.toString();
+  if (fullUrl.length > 2500) {
+    alert('Too much data for a QR code. Make sure all credentials are saved first.');
+    return;
+  }
+
+  const title = type === 'parent' ? '📱 Your Phone Setup' : '📱 His Phone Setup';
+  const desc  = type === 'parent'
+    ? 'Scan with your phone camera to open the parent dashboard with all settings pre-filled.'
+    : 'Have him scan this to open his checklist with his Canvas token and Firebase pre-filled.';
+  const instructions = type === 'parent'
+    ? '1. Open your phone camera\n2. Point at the QR code\n3. Tap the link\n4. Bookmark the page'
+    : '1. Open his phone camera\n2. Point at the QR code\n3. Tap the link — settings auto-fill\n4. He bookmarks it';
+
+  document.getElementById('qr-title').textContent = title;
+  document.getElementById('qr-desc').textContent  = desc;
+  document.getElementById('qr-instructions').style.whiteSpace = 'pre-line';
+  document.getElementById('qr-instructions').textContent = instructions;
+
+  const qrDiv = document.getElementById('qr-code');
+  qrDiv.innerHTML = '';
+  new QRCode(qrDiv, {
+    text:         fullUrl,
+    width:        220,
+    height:       220,
+    colorDark:    '#1c1814',
+    colorLight:   '#fdfaf4',
+    correctLevel: QRCode.CorrectLevel.M,
+  });
+
+  document.getElementById('qr-modal').classList.add('open');
+};
+</script>
+</body>
+</html>
