@@ -256,6 +256,62 @@
   }
   @keyframes bounce { 0%{transform:scale(0.5)} 70%{transform:scale(1.15)} 100%{transform:scale(1)} }
 
+  /* ── Submission Type ── */
+  .sub-type-wrap {
+    border-top: 1px solid var(--border);
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+  .sub-type-label {
+    font-size: 0.56rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 7px;
+  }
+  .sub-type-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .sub-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--subink);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .sub-btn:hover { border-color: var(--check); color: var(--check); }
+  .sub-btn.active { background: var(--check); color: white; border-color: var(--check); }
+  .sub-note-wrap { margin-top: 8px; display: none; }
+  .sub-note-wrap.show { display: block; }
+  .sub-note {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    color: var(--ink);
+    outline: none;
+    resize: none;
+  }
+  .sub-note:focus { border-color: var(--check); }
+  .sub-status {
+    font-size: 0.58rem;
+    color: var(--subink);
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
   /* ── Toast ── */
   #toast {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(10px);
@@ -304,7 +360,7 @@
 <!-- Setup banner -->
 <div id="setup-banner">
   ⚠️ Firebase isn't set up yet — check-offs will only save on this device.<br>
-  <a href="#" onclick="toggleConfig(); return false;">Tap here to add your Firebase config</a> to sync across devices.
+  <a href="#" onclick="toggleConfig(); return false;">Tap here to add your Canvas token and Firebase config</a> to sync across devices.
   <button onclick="document.getElementById('setup-banner').classList.remove('show')">Dismiss for now</button>
 </div>
 
@@ -312,8 +368,8 @@
 <div id="config-panel">
   <h3>Setup</h3>
   <div class="cfg-field">
-    <label>Canvas iCal URL</label>
-    <input type="url" id="cfg-ical" placeholder="webcal://lakota.instructure.com/feeds/…">
+    <label>Canvas API Token</label>
+    <input type="password" id="cfg-token" placeholder="Paste your Canvas API token…">
   </div>
   <div class="cfg-field">
     <label>Firebase Database URL</label>
@@ -325,8 +381,8 @@
   </div>
   <button class="cfg-save" onclick="saveConfig()">Save & Load</button>
   <p class="cfg-hint">
-    Your parent sets up Firebase — they'll give you the Database URL and API Key.<br>
-    The iCal URL comes from Canvas → Calendar → Calendar Feed.
+    Token: Canvas → Account → Settings → Approved Integrations → + New Access Token.<br>
+    Firebase values come from your parent.
   </p>
 </div>
 
@@ -366,7 +422,7 @@ let firebaseDb = null;
 
 function saveConfig() {
   cfg = {
-    ical:  document.getElementById('cfg-ical').value.trim(),
+    token: document.getElementById('cfg-token').value.trim(),
     fbUrl: document.getElementById('cfg-fb-url').value.trim(),
     fbKey: document.getElementById('cfg-fb-key').value.trim(),
   };
@@ -379,9 +435,9 @@ function toggleConfig() {
   const p = document.getElementById('config-panel');
   p.classList.toggle('show');
   if (p.classList.contains('show')) {
-    document.getElementById('cfg-ical').value  = cfg.ical  || '';
-    document.getElementById('cfg-fb-url').value = cfg.fbUrl || '';
-    document.getElementById('cfg-fb-key').value = cfg.fbKey || '';
+    document.getElementById('cfg-token').value   = cfg.token  || '';
+    document.getElementById('cfg-fb-url').value  = cfg.fbUrl || '';
+    document.getElementById('cfg-fb-key').value  = cfg.fbKey || '';
   }
 }
 window.toggleConfig = toggleConfig;
@@ -413,8 +469,16 @@ async function fbSet(id, checked) {
   if (!firebaseDb) return;
   const { db, ref, set } = firebaseDb;
   try {
-    await set(ref(db, `nhq_checked/${id}`), checked);
+    await set(ref(db, 'nhq_checked/' + id), checked);
   } catch(e) { console.warn('Firebase write failed:', e); }
+}
+
+async function fbSetSubType(id, type, note) {
+  if (!firebaseDb) return;
+  const { db, ref, set } = firebaseDb;
+  try {
+    await set(ref(db, 'nhq_subtypes/' + id), { type, note: note || '' });
+  } catch(e) { console.warn('Firebase subtype write failed:', e); }
 }
 
 function fbListen(callback) {
@@ -424,12 +488,18 @@ function fbListen(callback) {
     const data = snap.val() || {};
     callback(data);
   });
+  onValue(ref(db, 'nhq_subtypes'), snap => {
+    localSubTypes = snap.val() || {};
+    localStorage.setItem('nhq_subtypes', JSON.stringify(localSubTypes));
+    renderList();
+  });
 }
 
 // ══════════════════════════════════════
 // LOCAL FALLBACK STORE
 // ══════════════════════════════════════
-let localChecked = JSON.parse(localStorage.getItem('nhq_checked') || '{}');
+let localChecked  = JSON.parse(localStorage.getItem('nhq_checked') || '{}');
+let localSubTypes = JSON.parse(localStorage.getItem('nhq_subtypes') || '{}');
 
 function isChecked(id) {
   return localChecked[id] === true;
@@ -443,49 +513,104 @@ async function setChecked(id, val) {
   renderAllDone();
 }
 
+async function setSubType(id, type, note) {
+  if (!localSubTypes[id]) localSubTypes[id] = {};
+  localSubTypes[id] = { type, note: note || '' };
+  localStorage.setItem('nhq_subtypes', JSON.stringify(localSubTypes));
+  await fbSetSubType(id, type, note);
+}
+
 // ══════════════════════════════════════
-// iCAL LOAD
+// CANVAS API LOAD
 // ══════════════════════════════════════
+const PROXY = 'https://nudgehq-proxy-production.up.railway.app';
+
 async function loadICal() {
-  if (!cfg.ical) { document.getElementById('empty').style.display = 'block'; return; }
+  if (!cfg.token) {
+    document.getElementById('empty').style.display = 'block';
+    document.getElementById('config-panel').classList.add('show');
+    return;
+  }
   showLoading(true);
   try {
-    const url   = cfg.ical.replace(/^webcal:\/\//i, 'https://');
-    const proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
-    const res   = await fetch(proxy);
-    if (!res.ok) throw new Error('Could not fetch calendar');
-    const text  = await res.text();
-    assignments = parseICal(text);
+    // Fetch missing and upcoming in parallel
+    const [missingRes, upcomingRes] = await Promise.all([
+      fetch(PROXY + '/api/v1/users/self/missing_submissions?filter[]=submittable&per_page=50',
+        { headers: { 'Authorization': 'Bearer ' + cfg.token } }),
+      fetch(PROXY + '/api/v1/users/self/upcoming_events?per_page=50',
+        { headers: { 'Authorization': 'Bearer ' + cfg.token } }),
+    ]);
+
+    if (!missingRes.ok && !upcomingRes.ok) throw new Error('Could not connect to Canvas. Check your token.');
+
+    const missingRaw  = missingRes.ok  ? await missingRes.json()  : [];
+    const upcomingRaw = upcomingRes.ok ? await upcomingRes.json() : [];
+
+    const seen = new Set();
+    assignments = [];
+
+    // Add missing first
+    missingRaw.forEach(a => {
+      seen.add(String(a.id));
+      assignments.push({
+        id:     String(a.id),
+        title:  a.name || 'Untitled',
+        course: a.course_id ? 'Course ' + a.course_id : 'Canvas',
+        due:    a.due_at ? new Date(a.due_at) : null,
+        status: 'missing',
+      });
+    });
+
+    // Add upcoming (not already missing, not past academic year start)
+    const academicStart = new Date(new Date().getMonth() >= 7
+      ? new Date().getFullYear() : new Date().getFullYear() - 1, 7, 1);
+
+    upcomingRaw
+      .filter(e => e.type === 'Assignment' || e.assignment)
+      .forEach(e => {
+        const a = e.assignment || e;
+        const id = String(a.id || e.id);
+        if (seen.has(id)) return;
+        const due = a.due_at ? new Date(a.due_at) : (e.start_at ? new Date(e.start_at) : null);
+        if (!due || due < academicStart) return;
+        seen.add(id);
+        assignments.push({
+          id,
+          title:  a.name || a.title || e.title || 'Untitled',
+          course: a.course_id ? 'Course ' + a.course_id : 'Canvas',
+          due,
+          status: 'upcoming',
+        });
+      });
+
+    // Try to enrich course names
+    try {
+      const coursesRes = await fetch(PROXY + '/api/v1/users/self/courses?per_page=50',
+        { headers: { 'Authorization': 'Bearer ' + cfg.token } });
+      if (coursesRes.ok) {
+        const courses = await coursesRes.json();
+        const map = {};
+        courses.forEach(c => { map[String(c.id)] = c.name || c.course_code || ('Course ' + c.id); });
+        assignments.forEach(a => {
+          const cid = a.course.replace('Course ', '');
+          if (map[cid]) a.course = map[cid];
+        });
+      }
+    } catch(e) { /* non-fatal */ }
+
+    assignments.sort((a, b) => {
+      if (a.status === 'missing' && b.status !== 'missing') return -1;
+      if (b.status === 'missing' && a.status !== 'missing') return 1;
+      return (a.due || new Date(9e15)) - (b.due || new Date(9e15));
+    });
+
     renderList();
+    if (!assignments.length) showToast('No upcoming assignments found');
   } catch(e) {
-    showToast('Could not load calendar');
+    showToast('Error: ' + e.message);
     document.getElementById('empty').style.display = 'block';
   }
   showLoading(false);
-}
-
-function parseICal(text) {
-  const events = [];
-  const blocks = text.split('BEGIN:VEVENT');
-  for (let i = 1; i < blocks.length; i++) {
-    const b   = blocks[i];
-    const get = k => { const m = b.match(new RegExp(k+'[^:]*:([^\r\n]+)')); return m?m[1].trim():''; };
-    const due = parseDate(get('DTDUE')||get('DTSTART')||'');
-    if (!due) continue;
-    const now = new Date();
-    if (due < new Date(now - 7*24*3600000)) continue; // skip > 1 week old
-    let course = get('CATEGORIES') || '';
-    if (!course) { const m=(get('DESCRIPTION')||'').match(/Course:\s*([^\n\\]+)/i); course=m?m[1].trim():'Canvas'; }
-    events.push({ id: get('UID')||Math.random().toString(36), title: get('SUMMARY')||'Untitled', course, due });
-  }
-  return events.sort((a,b)=>a.due-b.due);
-}
-
-function parseDate(s) {
-  if (!s) return null;
-  s = s.replace(/[TZ]/g,'');
-  if (s.length < 8) return null;
-  return new Date(`${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}T${s.slice(8,10)||'23'}:${s.slice(10,12)||'59'}:00`);
 }
 
 // ══════════════════════════════════════
@@ -501,15 +626,17 @@ function urgency(due) {
 }
 
 function dueLabel(due) {
-  const h = (due - new Date()) / 3600000;
-  if (h < -0.5) {
-    const d = Math.floor(Math.abs(h)/24);
-    return d > 0 ? `${d}d overdue` : 'overdue';
-  }
-  if (h < 1)  return 'due < 1h';
-  if (h < 24) return `due in ${Math.floor(h)}h`;
-  const d = Math.floor(h/24);
-  return d === 1 ? 'due tomorrow' : `due in ${d}d`;
+  if (!due) return 'No due date';
+  const now   = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+  const diff  = Math.round((dueDay - today) / 86400000);
+  const dateStr = due.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+  const timeStr = due.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+  if (diff < 0)   return dateStr + ' · ' + timeStr + ' — overdue';
+  if (diff === 0) return 'Today · ' + timeStr;
+  if (diff === 1) return 'Tomorrow · ' + timeStr;
+  return dateStr + ' · ' + timeStr;
 }
 
 // ══════════════════════════════════════
@@ -548,6 +675,24 @@ function makeRow(a) {
   const u       = urgency(a.due);
   const dueMap  = { miss:'due-miss', fire:'due-fire', soon:'due-soon', ok:'due-ok', chill:'due-chill' };
 
+  const subType = localSubTypes[a.id] || {};
+  const types = [
+    { key:'paper',    icon:'📄', label:'Paper' },
+    { key:'canvas',   icon:'🖥️', label:'Canvas' },
+    { key:'external', icon:'🔗', label:'External' },
+    { key:'both',     icon:'📤', label:'Both' },
+  ];
+  const typeBtns = types.map(t =>
+    `<button class="sub-btn${subType.type===t.key?' active':''}"
+      onclick="handleSubType(event,'${a.id}','${t.key}')">${t.icon} ${t.label}</button>`
+  ).join('');
+
+  const noteVisible = (subType.type === 'external' || subType.type === 'both') ? 'show' : '';
+  const noteVal     = esc(subType.note || '');
+  const subStatus   = subType.type
+    ? `<span class="sub-status">${types.find(t=>t.key===subType.type)?.icon || ''} ${subType.type === 'external' || subType.type === 'both' ? (subType.note ? subType.note : 'Add platform name →') : types.find(t=>t.key===subType.type)?.label || ''}</span>`
+    : `<span class="sub-status" style="color:var(--muted)">Tap to set submission type</span>`;
+
   const row = document.createElement('div');
   row.className = `a-row${checked?' done':''}`;
   row.dataset.id = a.id;
@@ -559,11 +704,63 @@ function makeRow(a) {
         <span class="a-course">${esc(a.course)}</span>
         <span class="a-due ${dueMap[u]}">${dueLabel(a.due)}</span>
       </div>
+      ${subStatus}
+      <div class="sub-type-wrap" id="stwrap-${a.id}" style="display:none">
+        <div class="sub-type-label">How do you submit this?</div>
+        <div class="sub-type-btns">${typeBtns}</div>
+        <div class="sub-note-wrap ${noteVisible}" id="snwrap-${a.id}">
+          <input class="sub-note" id="snote-${a.id}" type="text"
+            placeholder="Which platform? (e.g. Canva, Google Docs…)"
+            value="${noteVal}"
+            oninput="handleNoteInput('${a.id}', this.value)"
+            onclick="event.stopPropagation()">
+        </div>
+      </div>
     </div>`;
 
-  row.addEventListener('click', () => toggleRow(a.id, row));
+  // Tap the content area to expand/collapse submission type
+  row.querySelector('.a-content').addEventListener('click', (e) => {
+    if (e.target.classList.contains('sub-btn') || e.target.classList.contains('sub-note')) return;
+    const wrap = document.getElementById('stwrap-' + a.id);
+    if (wrap) wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+  });
+
+  // Tap the checkbox to toggle done
+  row.querySelector('.check-wrap').addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleRow(a.id, row);
+  });
+
   return row;
 }
+
+window.handleSubType = async function(e, id, type) {
+  e.stopPropagation();
+  const current = localSubTypes[id] || {};
+  const note    = current.note || '';
+  await setSubType(id, type, note);
+
+  // Update button states
+  document.querySelectorAll(`[onclick*="handleSubType"][onclick*="'${id}'"]`).forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('onclick').includes("'"+type+"'"));
+  });
+
+  // Show/hide note field
+  const noteWrap = document.getElementById('snwrap-' + id);
+  if (noteWrap) noteWrap.classList.toggle('show', type === 'external' || type === 'both');
+
+  // Update status line
+  renderList();
+};
+
+let noteTimers = {};
+window.handleNoteInput = function(id, val) {
+  clearTimeout(noteTimers[id]);
+  noteTimers[id] = setTimeout(async () => {
+    const current = localSubTypes[id] || {};
+    await setSubType(id, current.type || 'external', val);
+  }, 600);
+};
 
 async function toggleRow(id, row) {
   const nowChecked = !isChecked(id);
@@ -627,6 +824,34 @@ function showToast(msg) {
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // ══════════════════════════════════════
+// AUTO-FILL FROM QR CODE URL PARAMS
+// ══════════════════════════════════════
+(function readQRParams() {
+  const p = new URLSearchParams(window.location.search);
+  const map = {
+    token: 'nhq_student_token',
+    fbUrl: 'nhq_student_fbUrl',
+    fbKey: 'nhq_student_fbKey',
+  };
+  let found = false;
+  Object.entries(map).forEach(([param, storageKey]) => {
+    const val = p.get(param);
+    if (val) { localStorage.setItem(storageKey, val); found = true; }
+  });
+  if (found) {
+    // Rebuild cfg from newly saved values
+    cfg.token = localStorage.getItem('nhq_student_token') || '';
+    cfg.fbUrl = localStorage.getItem('nhq_student_fbUrl') || '';
+    cfg.fbKey = localStorage.getItem('nhq_student_fbKey') || '';
+    localStorage.setItem('nhq_student_cfg', JSON.stringify(cfg));
+    // Clean URL so token isn't visible
+    if (window.history.replaceState) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }
+})();
+
+// ══════════════════════════════════════
 // INIT
 // ══════════════════════════════════════
 async function init() {
@@ -646,7 +871,7 @@ async function init() {
   showLoading(false);
 
   // Show config if nothing is set up
-  if (!cfg.ical) {
+  if (!cfg.token) {
     document.getElementById('empty').style.display = 'block';
     document.getElementById('config-panel').classList.add('show');
   }

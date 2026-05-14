@@ -167,6 +167,7 @@
     display: inline-flex; align-items: center; gap: 4px; margin-top: 2px;
   }
 
+  .sub-type-display { font-size: 0.58rem; color: var(--subink); margin-top: 3px; display: block; }
   .source-badge { font-size: 0.5rem; padding: 2px 7px; border-radius: 10px; letter-spacing: 0.06em; display: inline-block; margin-top: 2px; }
   .sb-api  { background: rgba(62,207,142,0.1); color: var(--chill); border: 1px solid rgba(62,207,142,0.2); }
   .sb-ical { background: rgba(91,141,238,0.1); color: var(--accent); border: 1px solid rgba(91,141,238,0.2); }
@@ -468,6 +469,7 @@ Query: filter[]=submittable</pre></div></div>
 const DOMAIN = 'https://lakota.instructure.com';
 let assignments  = [];
 let studentChecked = {}; // from Firebase
+let studentSubTypes = {}; // submission types set by student
 let parentDone   = JSON.parse(localStorage.getItem('nhq_parent_done') || '{}');
 let nudgeCount   = parseInt(localStorage.getItem('nhq_nudges') || '0');
 let activeFilter = 'all';
@@ -494,7 +496,12 @@ window.connectFirebase = async function() {
       studentChecked = snap.val() || {};
       updateFbStatus(true);
       renderAll();
-      showToast('Student check-offs synced ✓', 'ok');
+    });
+
+    // Listen for submission types set by student
+    onValue(ref(db, 'nhq_subtypes'), snap => {
+      studentSubTypes = snap.val() || {};
+      renderAll();
     });
 
     localStorage.setItem('nhq_fb_url', url);
@@ -866,6 +873,16 @@ function renderCards() {
         <span class="c-countdown cd-${u}">${countdown(a)}</span>
         ${a.status==='zeroed'?`<span style="font-size:0.63rem;font-weight:600;color:var(--fire)">Graded: ${a.grade||'0'} / ${a.points||0} pts — never submitted</span>`:a.points?`<span style="font-size:0.56rem;color:var(--muted)">${a.points} pts possible</span>`:''}
         ${sDone?`<span class="student-checked-badge">✅ He marked this done</span>`:''}
+        ${(function() {
+          const st = studentSubTypes[a.id];
+          if (!st || !st.type) return '<span style="font-size:0.55rem;color:var(--muted)">📋 Submission type not set yet</span>';
+          const icons = { paper:'📄', canvas:'🖥️', external:'🔗', both:'📤' };
+          const labels = { paper:'Paper — hand in class', canvas:'Canvas — submit online', external:'External', both:'Both — external + Canvas link' };
+          const icon  = icons[st.type]  || '📋';
+          const label = labels[st.type] || st.type;
+          const note  = st.note ? ' · ' + st.note : '';
+          return '<span style="font-size:0.58rem;color:var(--subink);margin-top:2px;display:block">' + icon + ' ' + label + note + '</span>';
+        })()}
         <span class="source-badge sb-api">● Live from Canvas API</span>
       </div>
       <div class="c-actions">
