@@ -321,6 +321,25 @@
   }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+  /* ── Undo Bar ── */
+  #undo-bar {
+    position: fixed; bottom: 20px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: var(--bg);
+    padding: 10px 8px 10px 18px;
+    border-radius: 20px; font-size: 0.63rem;
+    opacity: 0; transition: all 0.25s; pointer-events: none;
+    white-space: nowrap; z-index: 101;
+    display: flex; align-items: center; gap: 10px;
+  }
+  #undo-bar.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: all; }
+  #undo-btn {
+    background: white; color: var(--ink); border: none;
+    border-radius: 12px; padding: 4px 12px;
+    font-family: var(--mono); font-size: 0.6rem;
+    font-weight: 500; cursor: pointer;
+  }
+
   /* ── Settings button ── */
   .settings-btn {
     background: none; border: none; color: var(--muted); cursor: pointer;
@@ -411,6 +430,12 @@
 
 <!-- Toast -->
 <div id="toast"></div>
+
+<!-- Undo Bar -->
+<div id="undo-bar">
+  <span id="undo-msg">Marked as done</span>
+  <button id="undo-btn" onclick="undoCheck()">Undo</button>
+</div>
 
 <script type="module">
 // ══════════════════════════════════════
@@ -674,93 +699,109 @@ function makeRow(a) {
   const checked = isChecked(a.id);
   const u       = urgency(a.due);
   const dueMap  = { miss:'due-miss', fire:'due-fire', soon:'due-soon', ok:'due-ok', chill:'due-chill' };
-
   const subType = localSubTypes[a.id] || {};
+
   const types = [
     { key:'paper',    icon:'📄', label:'Paper' },
     { key:'canvas',   icon:'🖥️', label:'Canvas' },
     { key:'external', icon:'🔗', label:'External' },
     { key:'both',     icon:'📤', label:'Both' },
   ];
-  const typeBtns = types.map(t =>
-    `<button class="sub-btn${subType.type===t.key?' active':''}"
-      onclick="handleSubType(event,'${a.id}','${t.key}')">${t.icon} ${t.label}</button>`
-  ).join('');
 
-  const noteVisible = (subType.type === 'external' || subType.type === 'both') ? 'show' : '';
+  const noteVisible = (subType.type === 'external' || subType.type === 'both');
   const noteVal     = esc(subType.note || '');
-  const subStatus   = subType.type
-    ? `<span class="sub-status">${types.find(t=>t.key===subType.type)?.icon || ''} ${subType.type === 'external' || subType.type === 'both' ? (subType.note ? subType.note : 'Add platform name →') : types.find(t=>t.key===subType.type)?.label || ''}</span>`
-    : `<span class="sub-status" style="color:var(--muted)">Tap to set submission type</span>`;
 
   const row = document.createElement('div');
   row.className = `a-row${checked?' done':''}`;
   row.dataset.id = a.id;
-  row.innerHTML  = `
-    <div class="check-wrap"><span class="check-icon">✓</span></div>
-    <div class="a-content">
-      <div class="a-title">${esc(a.title)}</div>
-      <div class="a-meta">
-        <span class="a-course">${esc(a.course)}</span>
-        <span class="a-due ${dueMap[u]}">${dueLabel(a.due)}</span>
-      </div>
-      ${subStatus}
-      <div class="sub-type-wrap" id="stwrap-${a.id}" style="display:none">
-        <div class="sub-type-label">How do you submit this?</div>
-        <div class="sub-type-btns">${typeBtns}</div>
-        <div class="sub-note-wrap ${noteVisible}" id="snwrap-${a.id}">
-          <input class="sub-note" id="snote-${a.id}" type="text"
-            placeholder="Which platform? (e.g. Canva, Google Docs…)"
-            value="${noteVal}"
-            oninput="handleNoteInput('${a.id}', this.value)"
-            onclick="event.stopPropagation()">
-        </div>
-      </div>
-    </div>`;
 
-  // Tap the content area to expand/collapse submission type
-  row.querySelector('.a-content').addEventListener('click', (e) => {
-    if (e.target.classList.contains('sub-btn') || e.target.classList.contains('sub-note')) return;
-    const wrap = document.getElementById('stwrap-' + a.id);
-    if (wrap) wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+  // Build type buttons
+  const btnContainer = document.createElement('div');
+  btnContainer.className = 'sub-type-btns';
+  types.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'sub-btn' + (subType.type === t.key ? ' active' : '');
+    btn.textContent = t.icon + ' ' + t.label;
+    btn.dataset.type = t.key;
+    btn.dataset.id   = a.id;
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id   = a.id;
+      const type = t.key;
+      const cur  = localSubTypes[id] || {};
+      await setSubType(id, type, cur.note || '');
+      // Update active states
+      btnContainer.querySelectorAll('.sub-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.type === type);
+      });
+      // Show/hide note
+      const nw = row.querySelector('.sub-note-wrap');
+      if (nw) nw.classList.toggle('show', type === 'external' || type === 'both');
+    });
+    btnContainer.appendChild(btn);
   });
 
-  // Tap the checkbox to toggle done
-  row.querySelector('.check-wrap').addEventListener('click', (e) => {
+  // Build note input
+  const noteWrap = document.createElement('div');
+  noteWrap.className = 'sub-note-wrap' + (noteVisible ? ' show' : '');
+  const noteInput = document.createElement('input');
+  noteInput.className = 'sub-note';
+  noteInput.type = 'text';
+  noteInput.placeholder = 'Which platform? (e.g. Canva, Google Docs…)';
+  noteInput.value = subType.note || '';
+  let noteTimer;
+  noteInput.addEventListener('input', () => {
+    clearTimeout(noteTimer);
+    noteTimer = setTimeout(async () => {
+      const cur = localSubTypes[a.id] || {};
+      await setSubType(a.id, cur.type || 'external', noteInput.value);
+    }, 600);
+  });
+  noteInput.addEventListener('click', e => e.stopPropagation());
+  noteWrap.appendChild(noteInput);
+
+  // Build full card HTML structure
+  const checkWrap = document.createElement('div');
+  checkWrap.className = 'check-wrap';
+  checkWrap.innerHTML = '<span class="check-icon">✓</span>';
+  checkWrap.addEventListener('click', (e) => {
     e.stopPropagation();
     toggleRow(a.id, row);
   });
 
+  const aContent = document.createElement('div');
+  aContent.className = 'a-content';
+
+  const title = document.createElement('div');
+  title.className = 'a-title';
+  title.textContent = a.title;
+
+  const meta = document.createElement('div');
+  meta.className = 'a-meta';
+  meta.innerHTML = `<span class="a-course">${esc(a.course)}</span>
+    <span class="a-due ${dueMap[u]}">${dueLabel(a.due)}</span>`;
+
+  const subWrap = document.createElement('div');
+  subWrap.className = 'sub-type-wrap';
+
+  const subLabel = document.createElement('div');
+  subLabel.className = 'sub-type-label';
+  subLabel.textContent = 'How is this submitted?';
+
+  subWrap.appendChild(subLabel);
+  subWrap.appendChild(btnContainer);
+  subWrap.appendChild(noteWrap);
+
+  aContent.appendChild(title);
+  aContent.appendChild(meta);
+  aContent.appendChild(subWrap);
+
+  row.appendChild(checkWrap);
+  row.appendChild(aContent);
+
   return row;
 }
 
-window.handleSubType = async function(e, id, type) {
-  e.stopPropagation();
-  const current = localSubTypes[id] || {};
-  const note    = current.note || '';
-  await setSubType(id, type, note);
-
-  // Update button states
-  document.querySelectorAll(`[onclick*="handleSubType"][onclick*="'${id}'"]`).forEach(btn => {
-    btn.classList.toggle('active', btn.getAttribute('onclick').includes("'"+type+"'"));
-  });
-
-  // Show/hide note field
-  const noteWrap = document.getElementById('snwrap-' + id);
-  if (noteWrap) noteWrap.classList.toggle('show', type === 'external' || type === 'both');
-
-  // Update status line
-  renderList();
-};
-
-let noteTimers = {};
-window.handleNoteInput = function(id, val) {
-  clearTimeout(noteTimers[id]);
-  noteTimers[id] = setTimeout(async () => {
-    const current = localSubTypes[id] || {};
-    await setSubType(id, current.type || 'external', val);
-  }, 600);
-};
 
 async function toggleRow(id, row) {
   const nowChecked = !isChecked(id);
@@ -768,14 +809,17 @@ async function toggleRow(id, row) {
 
   row.classList.toggle('done', nowChecked);
   if (nowChecked) {
+    const a = assignments.find(x => x.id === id);
+    // Show undo bar instead of plain toast
+    showUndo(id, a ? a.title : 'Assignment');
     // Animate check then re-sort
     setTimeout(() => renderList(), 600);
     // Check if all done
     const allDone = assignments.every(a => isChecked(a.id));
     if (allDone) setTimeout(showCelebrate, 700);
-    showToast('Marked as done ✓');
   } else {
     renderList();
+    showToast('Unmarked ✓');
   }
 }
 
@@ -820,6 +864,35 @@ function showToast(msg) {
   clearTimeout(toastT);
   toastT = setTimeout(() => t.classList.remove('show'), 2200);
 }
+
+// Undo last check-off
+let lastChecked = null;
+let undoTimer   = null;
+
+function showUndo(id, title) {
+  lastChecked = id;
+  const bar = document.getElementById('undo-bar');
+  const msg = document.getElementById('undo-msg');
+  msg.textContent = '"' + title.slice(0, 30) + (title.length > 30 ? '…' : '') + '" marked done';
+  bar.classList.add('show');
+  clearTimeout(undoTimer);
+  undoTimer = setTimeout(() => {
+    bar.classList.remove('show');
+    lastChecked = null;
+  }, 5000);
+}
+
+async function undoCheck() {
+  if (!lastChecked) return;
+  const id = lastChecked;
+  lastChecked = null;
+  clearTimeout(undoTimer);
+  document.getElementById('undo-bar').classList.remove('show');
+  await setChecked(id, false);
+  renderList();
+  showToast('Undone ✓');
+}
+window.undoCheck = undoCheck;
 
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
