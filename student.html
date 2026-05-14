@@ -4,371 +4,305 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>My Assignments</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #faf8f4;
-    --surface: #fff;
-    --border: #ede8df;
+    --bg: #f5f0e8;
+    --surface: #fdfaf4;
+    --border: #e0d8c8;
     --ink: #1c1814;
-    --sub: #8a8178;
-    --muted: #c4bdb4;
-    --fire: #d94f3d;
+    --sub: #6b6358;
+    --muted: #b0a898;
+    --fire: #c0392b;
     --soon: #c96a1a;
     --ok: #a08010;
     --chill: #2a7a56;
+    --missing: #7b2d8b;
+    --accent: #3d5a99;
     --check: #2a7a56;
-    --serif: 'DM Sans', sans-serif;
-    --mono: 'Inter', sans-serif;
+    --sans: 'Inter', sans-serif;
+    --head: 'DM Sans', sans-serif;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
   body {
     background: var(--bg);
     color: var(--ink);
-    font-family: var(--mono);
+    font-family: var(--sans);
+    font-size: 13px;
     min-height: 100vh;
-    padding-bottom: 80px;
+    padding-bottom: 100px;
   }
 
   /* ── Header ── */
   header {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
-    padding: 20px 20px 16px;
+    padding: 18px 16px 14px;
     position: sticky;
     top: 0;
     z-index: 10;
   }
-
-  .header-top {
+  .header-row {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
-
   h1 {
-    font-family: var(--serif);
-    font-weight: 300;
-    font-style: italic;
-    font-size: 1.7rem;
+    font-family: var(--head);
+    font-size: 1.5rem;
+    font-weight: 500;
     color: var(--ink);
-    line-height: 1;
+  }
+  .date-label { font-size: 0.6rem; color: var(--muted); letter-spacing: 0.08em; }
+  .settings-btn {
+    background: none; border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 10px; color: var(--sub); cursor: pointer; font-size: 0.75rem;
   }
 
-  .date-label {
-    font-size: 0.58rem;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  /* Progress bar */
+  /* Progress */
   .progress-wrap { display: flex; align-items: center; gap: 10px; }
-  .progress-bar {
-    flex: 1;
-    height: 5px;
-    background: var(--border);
-    border-radius: 10px;
-    overflow: hidden;
-  }
-  .progress-fill {
-    height: 100%;
-    background: var(--check);
-    border-radius: 10px;
-    transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-    width: 0%;
-  }
-  .progress-label {
-    font-size: 0.6rem;
-    color: var(--sub);
-    white-space: nowrap;
-    min-width: 48px;
-    text-align: right;
-  }
+  .progress-bar  { flex: 1; height: 5px; background: var(--border); border-radius: 10px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--check); border-radius: 10px; transition: width 0.5s cubic-bezier(0.34,1.56,0.64,1); width: 0%; }
+  .progress-label { font-size: 0.6rem; color: var(--sub); white-space: nowrap; min-width: 40px; text-align: right; }
 
   /* ── Setup banner ── */
   #setup-banner {
-    background: #fffbf0;
-    border-bottom: 1px solid #ede0b0;
-    padding: 14px 20px;
-    font-size: 0.62rem;
-    color: #7a6010;
-    line-height: 1.65;
-    display: none;
+    background: #fffbf0; border-bottom: 1px solid #ede0b0;
+    padding: 12px 16px; font-size: 0.62rem; color: #7a6010;
+    line-height: 1.65; display: none;
   }
   #setup-banner.show { display: block; }
-  #setup-banner a { color: #5a4800; font-weight: 500; }
-  #setup-banner button {
-    background: #5a4800; color: #fff; border: none; border-radius: 5px;
-    padding: 5px 12px; font-family: var(--mono); font-size: 0.6rem;
-    cursor: pointer; margin-top: 8px; display: block;
-  }
 
   /* ── Config panel ── */
-  #config-panel {
-    display: none;
-    padding: 20px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-  }
+  #config-panel { display: none; padding: 16px; background: var(--surface); border-bottom: 1px solid var(--border); }
   #config-panel.show { display: block; }
-  #config-panel h3 { font-family: var(--serif); font-style: italic; font-size: 1rem; margin-bottom: 12px; }
+  #config-panel h3 { font-family: var(--head); font-size: 1rem; margin-bottom: 12px; font-weight: 500; }
   .cfg-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
   .cfg-field label { font-size: 0.6rem; color: var(--sub); }
   .cfg-field input {
     background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
-    padding: 9px 12px; font-family: var(--mono); font-size: 0.65rem;
+    padding: 9px 12px; font-family: var(--sans); font-size: 0.65rem;
     color: var(--ink); outline: none; width: 100%;
   }
   .cfg-field input:focus { border-color: var(--check); }
   .cfg-field input::placeholder { color: var(--muted); }
   .cfg-save {
     background: var(--ink); color: var(--bg); border: none; border-radius: 7px;
-    padding: 10px; font-family: var(--mono); font-size: 0.65rem; width: 100%;
-    cursor: pointer; margin-top: 4px;
+    padding: 10px; font-family: var(--sans); font-size: 0.65rem; width: 100%;
+    cursor: pointer; font-weight: 500;
   }
   .cfg-hint { font-size: 0.57rem; color: var(--muted); line-height: 1.6; margin-top: 8px; }
 
   /* ── Section labels ── */
   .section-head {
-    padding: 18px 20px 8px;
-    font-size: 0.56rem;
+    padding: 16px 16px 6px;
+    font-size: 0.58rem;
     text-transform: uppercase;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.12em;
     color: var(--muted);
+    font-weight: 600;
   }
 
-  /* ── Assignment rows ── */
-  .a-row {
+  /* ── Cards ── */
+  .cards-wrap { padding: 0 12px; }
+
+  .a-card {
     background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 14px 20px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 10px;
+    transition: box-shadow 0.2s;
+  }
+  .a-card.done { opacity: 0.42; }
+  .a-card.done .card-title { text-decoration: line-through; color: var(--muted); }
+  .a-card.c-missing { border-color: #d9aee8; background: #fdf8ff; }
+
+  .card-top {
     display: flex;
+    justify-content: space-between;
     align-items: flex-start;
-    gap: 14px;
-    transition: opacity 0.3s;
-    cursor: pointer;
-    user-select: none;
-    -webkit-user-select: none;
+    margin-bottom: 8px;
+    gap: 8px;
   }
-  .a-row:active { background: #f5f1ea; }
-  .a-row.done { opacity: 0.38; }
-
-  /* Checkbox */
-  .check-wrap {
+  .course-tag {
+    font-size: 0.56rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .urgency-pill {
+    font-size: 0.54rem;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
     flex-shrink: 0;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 1px;
-    transition: all 0.2s;
-    background: var(--surface);
   }
-  .a-row.done .check-wrap {
-    background: var(--check);
-    border-color: var(--check);
-  }
-  .check-icon {
-    opacity: 0;
-    transform: scale(0.5);
-    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    color: white;
-    font-size: 12px;
-    line-height: 1;
-  }
-  .a-row.done .check-icon { opacity: 1; transform: scale(1); }
+  .p-miss  { background: #f9f0fb; color: var(--missing); border: 1px solid #d9aee8; }
+  .p-fire  { background: #fdf0ee; color: var(--fire);    border: 1px solid #f5c5bf; }
+  .p-soon  { background: #fdf3ea; color: var(--soon);    border: 1px solid #f5d5b0; }
+  .p-ok    { background: #fefaee; color: var(--ok);      border: 1px solid #f0dfa0; }
+  .p-chill { background: #eef7f3; color: var(--chill);   border: 1px solid #b0d8c8; }
 
-  /* Content */
-  .a-content { flex: 1; min-width: 0; }
-  .a-title {
-    font-family: var(--serif);
-    font-weight: 300;
+  .card-title {
+    font-family: var(--head);
     font-size: 0.95rem;
+    font-weight: 500;
     line-height: 1.35;
     color: var(--ink);
-    margin-bottom: 4px;
+    margin-bottom: 6px;
   }
-  .a-row.done .a-title { text-decoration: line-through; color: var(--muted); }
-  .a-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .a-course { font-size: 0.55rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .card-due {
+    font-size: 0.62rem;
+    color: var(--sub);
+    margin-bottom: 12px;
+  }
+  .due-miss { color: var(--missing); font-weight: 500; }
+  .due-fire { color: var(--fire);    font-weight: 500; }
+  .due-soon { color: var(--soon); }
+  .due-ok   { color: var(--ok); }
 
-  .a-due {
-    font-size: 0.6rem;
-    font-weight: 400;
-    padding: 2px 7px;
-    border-radius: 10px;
-  }
-  .due-fire  { background: #fdf0ee; color: var(--fire);  }
-  .due-soon  { background: #fdf3ea; color: var(--soon);  }
-  .due-ok    { background: #fefaee; color: var(--ok);    }
-  .due-chill { background: #eef7f3; color: var(--chill); }
-  .due-miss  { background: #f9f0fb; color: #8b2da0;      }
-
-  /* ── Empty / Loading ── */
-  #empty {
-    display: none;
-    text-align: center;
-    padding: 70px 30px;
-    color: var(--muted);
-  }
-  #empty .big { font-family: var(--serif); font-style: italic; font-size: 2.5rem; margin-bottom: 10px; }
-  #empty p { font-size: 0.65rem; line-height: 1.7; }
-
-  #loading {
-    display: none;
-    text-align: center;
-    padding: 60px;
-    color: var(--muted);
-    font-size: 0.65rem;
-    letter-spacing: 0.1em;
-  }
-  .pulse { animation: pulse 1.3s ease-in-out infinite; }
-  @keyframes pulse { 0%,100%{opacity:0.25} 50%{opacity:1} }
-
-  /* ── Completion celebration ── */
-  #celebrate {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(250,248,244,0.92);
-    z-index: 50;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    text-align: center;
-    padding: 40px;
-    backdrop-filter: blur(4px);
-  }
-  #celebrate.show { display: flex; }
-  #celebrate .cel-big { font-size: 3.5rem; margin-bottom: 12px; animation: bounce 0.6s ease; }
-  #celebrate h2 { font-family: var(--serif); font-style: italic; font-size: 1.8rem; margin-bottom: 8px; }
-  #celebrate p { font-size: 0.68rem; color: var(--sub); line-height: 1.7; margin-bottom: 20px; }
-  #celebrate button {
-    background: var(--ink); color: var(--bg); border: none; border-radius: 8px;
-    padding: 12px 28px; font-family: var(--mono); font-size: 0.68rem; cursor: pointer;
-  }
-  @keyframes bounce { 0%{transform:scale(0.5)} 70%{transform:scale(1.15)} 100%{transform:scale(1)} }
-
-  /* ── Submission Type ── */
-  .sub-type-wrap {
+  /* ── Submission type ── */
+  .sub-section {
     border-top: 1px solid var(--border);
-    margin-top: 10px;
     padding-top: 10px;
+    margin-bottom: 12px;
   }
-  .sub-type-label {
+  .sub-label {
     font-size: 0.56rem;
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin-bottom: 7px;
+    font-weight: 600;
   }
-  .sub-type-btns {
+  .sub-btns {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+    margin-bottom: 8px;
   }
   .sub-btn {
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 20px;
-    padding: 4px 10px;
-    font-family: var(--mono);
-    font-size: 0.6rem;
-    color: var(--subink);
+    padding: 5px 11px;
+    font-family: var(--sans);
+    font-size: 0.62rem;
+    color: var(--sub);
     cursor: pointer;
     transition: all 0.15s;
     white-space: nowrap;
   }
   .sub-btn:hover { border-color: var(--check); color: var(--check); }
   .sub-btn.active { background: var(--check); color: white; border-color: var(--check); }
-  .sub-note-wrap { margin-top: 8px; display: none; }
-  .sub-note-wrap.show { display: block; }
-  .sub-note {
+  .sub-note-input {
     width: 100%;
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 6px;
     padding: 7px 10px;
-    font-family: var(--mono);
+    font-family: var(--sans);
     font-size: 0.62rem;
     color: var(--ink);
     outline: none;
-    resize: none;
+    display: none;
   }
-  .sub-note:focus { border-color: var(--check); }
-  .sub-status {
-    font-size: 0.58rem;
-    color: var(--subink);
-    margin-top: 6px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+  .sub-note-input.show { display: block; }
+  .sub-note-input:focus { border-color: var(--check); }
+
+  /* ── Done button ── */
+  .card-actions { display: flex; gap: 8px; }
+  .done-btn {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 9px;
+    font-family: var(--sans);
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: var(--sub);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .done-btn:hover { border-color: var(--check); color: var(--check); background: #eef7f3; }
+  .done-btn.checked { background: #eef7f3; color: var(--check); border-color: #b0d8c8; }
+
+  /* ── Empty / Loading ── */
+  #empty { display:none; text-align:center; padding:70px 20px; color:var(--muted); }
+  #empty .big { font-family:var(--head); font-size:2.5rem; margin-bottom:10px; }
+  #empty p { font-size:0.65rem; line-height:1.7; }
+  #loading { display:none; text-align:center; padding:60px; color:var(--muted); font-size:0.65rem; letter-spacing:0.1em; }
+  .pulse { animation:pulse 1.3s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:0.25} 50%{opacity:1} }
+
+  /* ── All done ── */
+  #all-done {
+    display:none; margin:16px; background:#eef7f3; border:1px solid #b0d8c8;
+    border-radius:10px; padding:20px; text-align:center;
+  }
+  #all-done.show { display:block; }
+  #all-done .ad-icon { font-size:2rem; margin-bottom:8px; }
+  #all-done h3 { font-family:var(--head); font-size:1.1rem; color:var(--chill); margin-bottom:4px; font-weight:500; }
+  #all-done p  { font-size:0.62rem; color:var(--sub); line-height:1.6; }
+
+  /* ── Celebrate ── */
+  #celebrate {
+    display:none; position:fixed; inset:0; background:rgba(245,240,232,0.92);
+    z-index:50; align-items:center; justify-content:center; flex-direction:column;
+    text-align:center; padding:40px; backdrop-filter:blur(4px);
+  }
+  #celebrate.show { display:flex; }
+  #celebrate .cel-big { font-size:3.5rem; margin-bottom:12px; animation:bounce 0.6s ease; }
+  #celebrate h2 { font-family:var(--head); font-size:1.8rem; margin-bottom:8px; font-weight:500; }
+  #celebrate p  { font-size:0.68rem; color:var(--sub); line-height:1.7; margin-bottom:20px; }
+  #celebrate button { background:var(--ink); color:var(--bg); border:none; border-radius:8px; padding:12px 28px; font-family:var(--sans); font-size:0.68rem; cursor:pointer; }
+  @keyframes bounce { 0%{transform:scale(0.5)} 70%{transform:scale(1.15)} 100%{transform:scale(1)} }
+
+  /* ── Undo bar ── */
+  #undo-bar {
+    position:fixed; bottom:20px; left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:var(--bg);
+    padding:10px 8px 10px 16px; border-radius:20px;
+    font-size:0.63rem; opacity:0; transition:all 0.25s;
+    pointer-events:none; white-space:nowrap; z-index:101;
+    display:flex; align-items:center; gap:10px;
+  }
+  #undo-bar.show { opacity:1; transform:translateX(-50%) translateY(0); pointer-events:all; }
+  #undo-btn {
+    background:white; color:var(--ink); border:none; border-radius:12px;
+    padding:4px 12px; font-family:var(--sans); font-size:0.6rem;
+    font-weight:600; cursor:pointer;
   }
 
   /* ── Toast ── */
   #toast {
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(10px);
-    background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 20px;
-    font-size: 0.63rem; opacity: 0; transition: all 0.25s; pointer-events: none;
-    white-space: nowrap; z-index: 100;
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(10px);
+    background:var(--ink); color:var(--bg); padding:10px 18px; border-radius:20px;
+    font-size:0.63rem; opacity:0; transition:all 0.25s; pointer-events:none;
+    white-space:nowrap; z-index:100;
   }
-  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  /* ── Undo Bar ── */
-  #undo-bar {
-    position: fixed; bottom: 20px; left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: var(--ink); color: var(--bg);
-    padding: 10px 8px 10px 18px;
-    border-radius: 20px; font-size: 0.63rem;
-    opacity: 0; transition: all 0.25s; pointer-events: none;
-    white-space: nowrap; z-index: 101;
-    display: flex; align-items: center; gap: 10px;
-  }
-  #undo-bar.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: all; }
-  #undo-btn {
-    background: white; color: var(--ink); border: none;
-    border-radius: 12px; padding: 4px 12px;
-    font-family: var(--mono); font-size: 0.6rem;
-    font-weight: 500; cursor: pointer;
-  }
-
-  /* ── Settings button ── */
-  .settings-btn {
-    background: none; border: none; color: var(--muted); cursor: pointer;
-    font-size: 1rem; padding: 2px; line-height: 1;
-  }
-  .settings-btn:active { color: var(--sub); }
-
-  /* All done banner */
-  #all-done {
-    display: none;
-    margin: 20px;
-    background: #eef7f3;
-    border: 1px solid #b0d8c8;
-    border-radius: 10px;
-    padding: 20px;
-    text-align: center;
-  }
-  #all-done.show { display: block; }
-  #all-done .ad-icon { font-size: 2rem; margin-bottom: 8px; }
-  #all-done h3 { font-family: var(--serif); font-style: italic; font-size: 1.1rem; color: var(--chill); margin-bottom: 4px; }
-  #all-done p  { font-size: 0.62rem; color: var(--sub); line-height: 1.6; }
+  #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="header-top">
-    <h1>My Assignments</h1>
-    <button class="settings-btn" onclick="toggleConfig()" title="Settings">⚙</button>
+  <div class="header-row">
+    <div>
+      <h1>My Assignments</h1>
+      <div class="date-label" id="date-label"></div>
+    </div>
+    <button class="settings-btn" onclick="toggleConfig()">⚙ Settings</button>
   </div>
   <div class="progress-wrap">
     <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
@@ -376,14 +310,10 @@
   </div>
 </header>
 
-<!-- Setup banner -->
-<div id="setup-banner">
-  ⚠️ Firebase isn't set up yet — check-offs will only save on this device.<br>
-  <a href="#" onclick="toggleConfig(); return false;">Tap here to add your Canvas token and Firebase config</a> to sync across devices.
-  <button onclick="document.getElementById('setup-banner').classList.remove('show')">Dismiss for now</button>
+<div id="setup-banner" class="show">
+  ⚠️ Tap <strong>⚙ Settings</strong> to connect your Canvas account.
 </div>
 
-<!-- Config panel -->
 <div id="config-panel">
   <h3>Setup</h3>
   <div class="cfg-field">
@@ -399,53 +329,70 @@
     <input type="text" id="cfg-fb-key" placeholder="AIzaSy…">
   </div>
   <button class="cfg-save" onclick="saveConfig()">Save & Load</button>
-  <p class="cfg-hint">
-    Token: Canvas → Account → Settings → Approved Integrations → + New Access Token.<br>
-    Firebase values come from your parent.
-  </p>
+  <p class="cfg-hint">Token: Canvas → Account → Settings → Approved Integrations → + New Access Token.<br>Firebase values come from your parent's dashboard.</p>
 </div>
 
-<!-- Main list -->
-<div id="list-wrap">
-  <div id="loading"><span class="pulse">Loading your assignments…</span></div>
-  <div id="empty">
-    <div class="big">✌️</div>
-    <p>No assignments yet.<br>Tap ⚙ to connect your Canvas calendar.</p>
-  </div>
-  <div id="all-done">
-    <div class="ad-icon">🎉</div>
-    <h3>Everything's done!</h3>
-    <p>You've checked off all your assignments.<br>Seriously — well done.</p>
-  </div>
-  <div id="assignment-list"></div>
-</div>
+<div id="loading"><span class="pulse">Loading your assignments…</span></div>
+<div id="empty"><div class="big">✌️</div><p>No assignments yet.<br>Tap ⚙ Settings to connect Canvas.</p></div>
+<div id="all-done" ><div class="ad-icon">🎉</div><h3>Everything's done!</h3><p>You checked off all your assignments.<br>Seriously — well done.</p></div>
+<div id="card-wrap"></div>
 
-<!-- Celebration overlay -->
 <div id="celebrate">
   <div class="cel-big">🎉</div>
   <h2>All done!</h2>
   <p>You checked off every assignment.<br>That took real effort. Proud of you.</p>
-  <button onclick="closeCelebrate()">Thanks 😊</button>
+  <button onclick="document.getElementById('celebrate').classList.remove('show')">Thanks 😊</button>
 </div>
 
-<!-- Toast -->
-<div id="toast"></div>
-
-<!-- Undo Bar -->
 <div id="undo-bar">
   <span id="undo-msg">Marked as done</span>
   <button id="undo-btn" onclick="undoCheck()">Undo</button>
 </div>
+<div id="toast"></div>
 
 <script type="module">
-// ══════════════════════════════════════
-// CONFIG
-// ══════════════════════════════════════
-let cfg = JSON.parse(localStorage.getItem('nhq_student_cfg') || '{}');
-let assignments = [];
-let firebaseDb = null;
+const PROXY = 'https://nudgehq-proxy-production.up.railway.app';
 
-function saveConfig() {
+// ── Config ──
+let cfg = JSON.parse(localStorage.getItem('nhq_student_cfg') || '{}');
+
+// ── State ──
+let assignments   = [];
+let localChecked  = JSON.parse(localStorage.getItem('nhq_checked')  || '{}');
+let localSubTypes = JSON.parse(localStorage.getItem('nhq_subtypes') || '{}');
+let firebaseDb    = null;
+let lastChecked   = null;
+let undoTimer     = null;
+
+// ── QR param reader ──
+(function() {
+  const p = new URLSearchParams(window.location.search);
+  const map = { token:'nhq_student_token', fbUrl:'nhq_student_fbUrl', fbKey:'nhq_student_fbKey' };
+  let found = false;
+  Object.entries(map).forEach(([param, key]) => {
+    const val = p.get(param);
+    if (val) { localStorage.setItem(key, val); found = true; }
+  });
+  if (found) {
+    cfg.token = localStorage.getItem('nhq_student_token') || '';
+    cfg.fbUrl = localStorage.getItem('nhq_student_fbUrl') || '';
+    cfg.fbKey = localStorage.getItem('nhq_student_fbKey') || '';
+    localStorage.setItem('nhq_student_cfg', JSON.stringify(cfg));
+    if (window.history.replaceState) window.history.replaceState({}, '', window.location.pathname);
+  }
+})();
+
+// ── Config UI ──
+window.toggleConfig = function() {
+  const p = document.getElementById('config-panel');
+  p.classList.toggle('show');
+  if (p.classList.contains('show')) {
+    document.getElementById('cfg-token').value  = cfg.token  || '';
+    document.getElementById('cfg-fb-url').value = cfg.fbUrl  || '';
+    document.getElementById('cfg-fb-key').value = cfg.fbKey  || '';
+  }
+};
+window.saveConfig = function() {
   cfg = {
     token: document.getElementById('cfg-token').value.trim(),
     fbUrl: document.getElementById('cfg-fb-url').value.trim(),
@@ -454,298 +401,210 @@ function saveConfig() {
   localStorage.setItem('nhq_student_cfg', JSON.stringify(cfg));
   document.getElementById('config-panel').classList.remove('show');
   init();
-}
+};
 
-function toggleConfig() {
-  const p = document.getElementById('config-panel');
-  p.classList.toggle('show');
-  if (p.classList.contains('show')) {
-    document.getElementById('cfg-token').value   = cfg.token  || '';
-    document.getElementById('cfg-fb-url').value  = cfg.fbUrl || '';
-    document.getElementById('cfg-fb-key').value  = cfg.fbKey || '';
-  }
-}
-window.toggleConfig = toggleConfig;
-window.saveConfig   = saveConfig;
-
-// ══════════════════════════════════════
-// FIREBASE
-// ══════════════════════════════════════
+// ── Firebase ──
 async function initFirebase() {
-  if (!cfg.fbUrl || !cfg.fbKey) {
-    document.getElementById('setup-banner').classList.add('show');
-    return false;
-  }
+  if (!cfg.fbUrl || !cfg.fbKey) { showBanner(true); return false; }
   try {
-    const { initializeApp }          = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const { initializeApp }             = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
     const { getDatabase, ref, set, onValue } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+    const app = initializeApp({ apiKey: cfg.fbKey, databaseURL: cfg.fbUrl }, 'student-v2');
+    const db  = getDatabase(app);
+    firebaseDb = { db, ref, set };
 
-    const app = initializeApp({ apiKey: cfg.fbKey, databaseURL: cfg.fbUrl }, 'student-app');
-    firebaseDb = { db: getDatabase(app), ref, set, onValue };
+    onValue(ref(db, 'nhq_checked'), snap => {
+      localChecked = snap.val() || {};
+      localStorage.setItem('nhq_checked', JSON.stringify(localChecked));
+      renderCards();
+    });
+    onValue(ref(db, 'nhq_subtypes'), snap => {
+      localSubTypes = snap.val() || {};
+      localStorage.setItem('nhq_subtypes', JSON.stringify(localSubTypes));
+      renderCards();
+    });
     return true;
-  } catch(e) {
-    console.warn('Firebase init failed:', e);
-    document.getElementById('setup-banner').classList.add('show');
-    return false;
-  }
+  } catch(e) { showBanner(true); return false; }
 }
 
-async function fbSet(id, checked) {
+async function fbWrite(path, val) {
   if (!firebaseDb) return;
-  const { db, ref, set } = firebaseDb;
-  try {
-    await set(ref(db, 'nhq_checked/' + id), checked);
-  } catch(e) { console.warn('Firebase write failed:', e); }
+  try { await firebaseDb.set(firebaseDb.ref(firebaseDb.db, path), val); }
+  catch(e) { console.warn('Firebase write failed:', e); }
 }
 
-async function fbSetSubType(id, type, note) {
-  if (!firebaseDb) return;
-  const { db, ref, set } = firebaseDb;
-  try {
-    await set(ref(db, 'nhq_subtypes/' + id), { type, note: note || '' });
-  } catch(e) { console.warn('Firebase subtype write failed:', e); }
-}
-
-function fbListen(callback) {
-  if (!firebaseDb) return;
-  const { db, ref, onValue } = firebaseDb;
-  onValue(ref(db, 'nhq_checked'), snap => {
-    const data = snap.val() || {};
-    callback(data);
-  });
-  onValue(ref(db, 'nhq_subtypes'), snap => {
-    localSubTypes = snap.val() || {};
-    localStorage.setItem('nhq_subtypes', JSON.stringify(localSubTypes));
-    renderList();
-  });
-}
-
-// ══════════════════════════════════════
-// LOCAL FALLBACK STORE
-// ══════════════════════════════════════
-let localChecked  = JSON.parse(localStorage.getItem('nhq_checked') || '{}');
-let localSubTypes = JSON.parse(localStorage.getItem('nhq_subtypes') || '{}');
-
-function isChecked(id) {
-  return localChecked[id] === true;
-}
-
-async function setChecked(id, val) {
-  localChecked[id] = val;
-  localStorage.setItem('nhq_checked', JSON.stringify(localChecked));
-  await fbSet(id, val);
-  renderProgress();
-  renderAllDone();
-}
-
-async function setSubType(id, type, note) {
-  if (!localSubTypes[id]) localSubTypes[id] = {};
-  localSubTypes[id] = { type, note: note || '' };
-  localStorage.setItem('nhq_subtypes', JSON.stringify(localSubTypes));
-  await fbSetSubType(id, type, note);
-}
-
-// ══════════════════════════════════════
-// CANVAS API LOAD
-// ══════════════════════════════════════
-const PROXY = 'https://nudgehq-proxy-production.up.railway.app';
-
-async function loadICal() {
-  if (!cfg.token) {
-    document.getElementById('empty').style.display = 'block';
-    document.getElementById('config-panel').classList.add('show');
-    return;
-  }
+// ── Canvas API ──
+async function loadCanvas() {
+  if (!cfg.token) { showEmpty(); return; }
   showLoading(true);
   try {
-    // Fetch missing and upcoming in parallel
-    const [missingRes, upcomingRes] = await Promise.all([
+    const [missingRes, upRes] = await Promise.all([
       fetch(PROXY + '/api/v1/users/self/missing_submissions?filter[]=submittable&per_page=50',
         { headers: { 'Authorization': 'Bearer ' + cfg.token } }),
       fetch(PROXY + '/api/v1/users/self/upcoming_events?per_page=50',
         { headers: { 'Authorization': 'Bearer ' + cfg.token } }),
     ]);
 
-    if (!missingRes.ok && !upcomingRes.ok) throw new Error('Could not connect to Canvas. Check your token.');
-
-    const missingRaw  = missingRes.ok  ? await missingRes.json()  : [];
-    const upcomingRaw = upcomingRes.ok ? await upcomingRes.json() : [];
+    const missingRaw  = missingRes.ok  ? await missingRes.json() : [];
+    const upcomingRaw = upRes.ok       ? await upRes.json()      : [];
 
     const seen = new Set();
     assignments = [];
 
-    // Add missing first
     missingRaw.forEach(a => {
-      seen.add(String(a.id));
-      assignments.push({
-        id:     String(a.id),
-        title:  a.name || 'Untitled',
-        course: a.course_id ? 'Course ' + a.course_id : 'Canvas',
-        due:    a.due_at ? new Date(a.due_at) : null,
-        status: 'missing',
-      });
+      const id = String(a.id);
+      if (seen.has(id)) return;
+      seen.add(id);
+      assignments.push({ id, title: a.name||'Untitled', course: 'Course '+a.course_id, due: a.due_at?new Date(a.due_at):null, status:'missing' });
     });
 
-    // Add upcoming (not already missing, not past academic year start)
-    const academicStart = new Date(new Date().getMonth() >= 7
-      ? new Date().getFullYear() : new Date().getFullYear() - 1, 7, 1);
+    const academicStart = new Date(new Date().getMonth()>=7 ? new Date().getFullYear() : new Date().getFullYear()-1, 7, 1);
+    upcomingRaw.filter(e => e.type==='Assignment'||e.assignment).forEach(e => {
+      const a   = e.assignment || e;
+      const id  = String(a.id || e.id);
+      if (seen.has(id)) return;
+      const due = a.due_at ? new Date(a.due_at) : (e.start_at ? new Date(e.start_at) : null);
+      if (!due || due < academicStart) return;
+      seen.add(id);
+      assignments.push({ id, title: a.name||a.title||e.title||'Untitled', course: 'Course '+(a.course_id||''), due, status:'upcoming' });
+    });
 
-    upcomingRaw
-      .filter(e => e.type === 'Assignment' || e.assignment)
-      .forEach(e => {
-        const a = e.assignment || e;
-        const id = String(a.id || e.id);
-        if (seen.has(id)) return;
-        const due = a.due_at ? new Date(a.due_at) : (e.start_at ? new Date(e.start_at) : null);
-        if (!due || due < academicStart) return;
-        seen.add(id);
-        assignments.push({
-          id,
-          title:  a.name || a.title || e.title || 'Untitled',
-          course: a.course_id ? 'Course ' + a.course_id : 'Canvas',
-          due,
-          status: 'upcoming',
-        });
-      });
-
-    // Try to enrich course names
+    // Enrich course names
     try {
-      const coursesRes = await fetch(PROXY + '/api/v1/users/self/courses?per_page=50',
+      const cr = await fetch(PROXY + '/api/v1/users/self/courses?enrollment_state=active&per_page=50',
         { headers: { 'Authorization': 'Bearer ' + cfg.token } });
-      if (coursesRes.ok) {
-        const courses = await coursesRes.json();
+      if (cr.ok) {
+        const courses = await cr.json();
         const map = {};
-        courses.forEach(c => { map[String(c.id)] = c.name || c.course_code || ('Course ' + c.id); });
+        courses.forEach(c => { map[String(c.id)] = c.name || c.course_code || 'Course '+c.id; });
         assignments.forEach(a => {
-          const cid = a.course.replace('Course ', '');
+          const cid = String(a.course).replace(/^Course\s+/i,'').trim();
           if (map[cid]) a.course = map[cid];
         });
       }
-    } catch(e) { /* non-fatal */ }
+    } catch(e) {}
 
-    assignments.sort((a, b) => {
-      if (a.status === 'missing' && b.status !== 'missing') return -1;
-      if (b.status === 'missing' && a.status !== 'missing') return 1;
-      return (a.due || new Date(9e15)) - (b.due || new Date(9e15));
+    assignments.sort((a,b) => {
+      if (a.status==='missing'&&b.status!=='missing') return -1;
+      if (b.status==='missing'&&a.status!=='missing') return 1;
+      return (a.due||new Date(9e15))-(b.due||new Date(9e15));
     });
 
-    renderList();
-    if (!assignments.length) showToast('No upcoming assignments found');
+    renderCards();
+    showBanner(false);
   } catch(e) {
-    showToast('Error: ' + e.message);
-    document.getElementById('empty').style.display = 'block';
+    showToast('Could not load Canvas: ' + e.message);
+    showEmpty();
   }
   showLoading(false);
 }
 
-// ══════════════════════════════════════
-// URGENCY
-// ══════════════════════════════════════
-function urgency(due) {
-  const h = (due - new Date()) / 3600000;
-  if (h < -0.5) return 'miss';
-  if (h <= 24)  return 'fire';
-  if (h <= 168) return 'soon';
-  if (h <= 336) return 'ok';
+// ── Urgency ──
+function urgency(a) {
+  if (a.status==='missing') return 'miss';
+  if (!a.due) return 'chill';
+  const h = (a.due-new Date())/3600000;
+  if (h<=24)  return 'fire';
+  if (h<=168) return 'soon';
+  if (h<=336) return 'ok';
   return 'chill';
 }
 
-function dueLabel(due) {
-  if (!due) return 'No due date';
-  const now   = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
-  const diff  = Math.round((dueDay - today) / 86400000);
-  const dateStr = due.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
-  const timeStr = due.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
-  if (diff < 0)   return dateStr + ' · ' + timeStr + ' — overdue';
-  if (diff === 0) return 'Today · ' + timeStr;
-  if (diff === 1) return 'Tomorrow · ' + timeStr;
-  return dateStr + ' · ' + timeStr;
+function dueLabel(a) {
+  if (a.status==='missing') {
+    if (!a.due) return 'Officially missing in Canvas';
+    const h = Math.abs(Math.floor((a.due-new Date())/3600000));
+    return (h<24?h+'h':Math.floor(h/24)+'d') + ' overdue · officially missing';
+  }
+  if (!a.due) return 'No due date';
+  const now    = new Date();
+  const today  = new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const dueDay = new Date(a.due.getFullYear(),a.due.getMonth(),a.due.getDate());
+  const diff   = Math.round((dueDay-today)/86400000);
+  const dateStr = a.due.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  const timeStr = a.due.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  if (diff<0)  return dateStr+' · '+timeStr+' — overdue';
+  if (diff===0) return 'Today · '+timeStr;
+  if (diff===1) return 'Tomorrow · '+timeStr;
+  return dateStr+' · '+timeStr;
 }
 
-// ══════════════════════════════════════
-// RENDER
-// ══════════════════════════════════════
-function renderList() {
-  const list = document.getElementById('assignment-list');
-  list.innerHTML = '';
-  document.getElementById('empty').style.display     = assignments.length ? 'none' : 'block';
-  document.getElementById('all-done').classList.remove('show');
+// ── Render ──
+function renderCards() {
+  const wrap = document.getElementById('card-wrap');
+  wrap.innerHTML = '';
 
-  // Separate missing / upcoming / done
-  const missing  = assignments.filter(a => urgency(a.due)==='miss' && !isChecked(a.id));
-  const upcoming = assignments.filter(a => urgency(a.due)!=='miss' && !isChecked(a.id));
-  const done     = assignments.filter(a => isChecked(a.id));
+  const total   = assignments.length;
+  const checked = assignments.filter(a=>localChecked[a.id]===true).length;
+  document.getElementById('progress-fill').style.width  = total ? Math.round(checked/total*100)+'%' : '0%';
+  document.getElementById('progress-label').textContent = checked+' / '+total;
 
-  if (missing.length) {
-    list.insertAdjacentHTML('beforeend', `<div class="section-head">Overdue</div>`);
-    missing.forEach(a => list.appendChild(makeRow(a)));
-  }
-  if (upcoming.length) {
-    list.insertAdjacentHTML('beforeend', `<div class="section-head">Upcoming</div>`);
-    upcoming.forEach(a => list.appendChild(makeRow(a)));
-  }
-  if (done.length) {
-    list.insertAdjacentHTML('beforeend', `<div class="section-head">Completed</div>`);
-    done.forEach(a => list.appendChild(makeRow(a)));
-  }
+  const missing  = assignments.filter(a=>a.status==='missing'&&!localChecked[a.id]);
+  const upcoming = assignments.filter(a=>a.status!=='missing'&&!localChecked[a.id]);
+  const done     = assignments.filter(a=>localChecked[a.id]===true);
 
-  renderProgress();
-  renderAllDone();
+  document.getElementById('empty').style.display    = total===0?'block':'none';
+  document.getElementById('all-done').classList.toggle('show', total>0&&done.length===total);
+
+  if (missing.length)  { wrap.appendChild(sectionHead('⚠️ Overdue / Missing')); missing.forEach(a=>wrap.appendChild(makeCard(a))); }
+  if (upcoming.length) { wrap.appendChild(sectionHead('📅 Upcoming'));           upcoming.forEach(a=>wrap.appendChild(makeCard(a))); }
+  if (done.length)     { wrap.appendChild(sectionHead('✓ Completed'));           done.forEach(a=>wrap.appendChild(makeCard(a))); }
 }
 
-function makeRow(a) {
-  const checked = isChecked(a.id);
-  const u       = urgency(a.due);
-  const dueMap  = { miss:'due-miss', fire:'due-fire', soon:'due-soon', ok:'due-ok', chill:'due-chill' };
-  const subType = localSubTypes[a.id] || {};
+function sectionHead(text) {
+  const d = document.createElement('div');
+  d.className = 'section-head';
+  d.textContent = text;
+  return d;
+}
+
+function makeCard(a) {
+  const checked  = localChecked[a.id]===true;
+  const u        = urgency(a);
+  const subType  = localSubTypes[a.id] || {};
+  const pillMap  = { miss:'p-miss', fire:'p-fire', soon:'p-soon', ok:'p-ok', chill:'p-chill' };
+  const pillLbl  = { miss:'⚠️ Missing', fire:'🔴 Today', soon:'🟠 This Week', ok:'🟡 Coming Up', chill:'🟢 Later' };
+  const dueClass = { miss:'due-miss', fire:'due-fire', soon:'due-soon', ok:'due-ok', chill:'' };
+
+  const card = document.createElement('div');
+  card.className = `a-card${checked?' done':''}${a.status==='missing'?' c-missing':''}`;
+
+  // Top row
+  const top = document.createElement('div');
+  top.className = 'card-top';
+  top.innerHTML = `<span class="course-tag">${esc(a.course)}</span>
+    <span class="urgency-pill ${pillMap[u]||'p-chill'}">${checked?'✓ Done':(pillLbl[u]||'')}</span>`;
+
+  // Title
+  const title = document.createElement('div');
+  title.className = 'card-title';
+  title.textContent = a.title;
+
+  // Due
+  const due = document.createElement('div');
+  due.className = 'card-due ' + (dueClass[u]||'');
+  due.textContent = dueLabel(a);
+
+  // Submission type section
+  const subSection = document.createElement('div');
+  subSection.className = 'sub-section';
+
+  const subLabel = document.createElement('div');
+  subLabel.className = 'sub-label';
+  subLabel.textContent = 'How is this submitted?';
+
+  const subBtns = document.createElement('div');
+  subBtns.className = 'sub-btns';
 
   const types = [
     { key:'paper',    icon:'📄', label:'Paper' },
-    { key:'canvas',   icon:'🖥️', label:'Canvas' },
+    { key:'canvas',   icon:'🖥️',  label:'Canvas' },
     { key:'external', icon:'🔗', label:'External' },
     { key:'both',     icon:'📤', label:'Both' },
   ];
 
-  const noteVisible = (subType.type === 'external' || subType.type === 'both');
-  const noteVal     = esc(subType.note || '');
-
-  const row = document.createElement('div');
-  row.className = `a-row${checked?' done':''}`;
-  row.dataset.id = a.id;
-
-  // Build type buttons
-  const btnContainer = document.createElement('div');
-  btnContainer.className = 'sub-type-btns';
-  types.forEach(t => {
-    const btn = document.createElement('button');
-    btn.className = 'sub-btn' + (subType.type === t.key ? ' active' : '');
-    btn.textContent = t.icon + ' ' + t.label;
-    btn.dataset.type = t.key;
-    btn.dataset.id   = a.id;
-    btn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const id   = a.id;
-      const type = t.key;
-      const cur  = localSubTypes[id] || {};
-      await setSubType(id, type, cur.note || '');
-      // Update active states
-      btnContainer.querySelectorAll('.sub-btn').forEach(b => {
-        b.classList.toggle('active', b.dataset.type === type);
-      });
-      // Show/hide note
-      const nw = row.querySelector('.sub-note-wrap');
-      if (nw) nw.classList.toggle('show', type === 'external' || type === 'both');
-    });
-    btnContainer.appendChild(btn);
-  });
-
-  // Build note input
-  const noteWrap = document.createElement('div');
-  noteWrap.className = 'sub-note-wrap' + (noteVisible ? ' show' : '');
   const noteInput = document.createElement('input');
-  noteInput.className = 'sub-note';
+  noteInput.className = 'sub-note-input' + ((subType.type==='external'||subType.type==='both')?' show':'');
   noteInput.type = 'text';
   noteInput.placeholder = 'Which platform? (e.g. Canva, Google Docs…)';
   noteInput.value = subType.note || '';
@@ -754,209 +613,117 @@ function makeRow(a) {
     clearTimeout(noteTimer);
     noteTimer = setTimeout(async () => {
       const cur = localSubTypes[a.id] || {};
-      await setSubType(a.id, cur.type || 'external', noteInput.value);
+      localSubTypes[a.id] = { type: cur.type||'external', note: noteInput.value };
+      localStorage.setItem('nhq_subtypes', JSON.stringify(localSubTypes));
+      await fbWrite('nhq_subtypes/'+a.id, localSubTypes[a.id]);
     }, 600);
   });
-  noteInput.addEventListener('click', e => e.stopPropagation());
-  noteWrap.appendChild(noteInput);
 
-  // Build full card HTML structure
-  const checkWrap = document.createElement('div');
-  checkWrap.className = 'check-wrap';
-  checkWrap.innerHTML = '<span class="check-icon">✓</span>';
-  checkWrap.addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleRow(a.id, row);
+  types.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'sub-btn' + (subType.type===t.key?' active':'');
+    btn.textContent = t.icon+' '+t.label;
+    btn.addEventListener('click', async () => {
+      localSubTypes[a.id] = { type: t.key, note: (localSubTypes[a.id]||{}).note||'' };
+      localStorage.setItem('nhq_subtypes', JSON.stringify(localSubTypes));
+      await fbWrite('nhq_subtypes/'+a.id, localSubTypes[a.id]);
+      // Update UI
+      subBtns.querySelectorAll('.sub-btn').forEach(b => b.classList.toggle('active', b===btn));
+      noteInput.classList.toggle('show', t.key==='external'||t.key==='both');
+    });
+    subBtns.appendChild(btn);
   });
 
-  const aContent = document.createElement('div');
-  aContent.className = 'a-content';
+  subSection.appendChild(subLabel);
+  subSection.appendChild(subBtns);
+  subSection.appendChild(noteInput);
 
-  const title = document.createElement('div');
-  title.className = 'a-title';
-  title.textContent = a.title;
+  // Done button
+  const actions = document.createElement('div');
+  actions.className = 'card-actions';
+  const doneBtn = document.createElement('button');
+  doneBtn.className = 'done-btn' + (checked?' checked':'');
+  doneBtn.textContent = checked ? '✓ Marked Done' : 'Mark as Done';
+  doneBtn.addEventListener('click', async () => {
+    const nowDone = !localChecked[a.id];
+    localChecked[a.id] = nowDone;
+    localStorage.setItem('nhq_checked', JSON.stringify(localChecked));
+    await fbWrite('nhq_checked/'+a.id, nowDone);
+    if (nowDone) {
+      showUndo(a.id, a.title);
+      const allDone = assignments.every(x=>localChecked[x.id]===true);
+      if (allDone) setTimeout(()=>document.getElementById('celebrate').classList.add('show'), 500);
+    } else {
+      showToast('Unmarked ✓');
+    }
+    renderCards();
+  });
+  actions.appendChild(doneBtn);
 
-  const meta = document.createElement('div');
-  meta.className = 'a-meta';
-  meta.innerHTML = `<span class="a-course">${esc(a.course)}</span>
-    <span class="a-due ${dueMap[u]}">${dueLabel(a.due)}</span>`;
+  card.appendChild(top);
+  card.appendChild(title);
+  card.appendChild(due);
+  card.appendChild(subSection);
+  card.appendChild(actions);
 
-  const subWrap = document.createElement('div');
-  subWrap.className = 'sub-type-wrap';
-
-  const subLabel = document.createElement('div');
-  subLabel.className = 'sub-type-label';
-  subLabel.textContent = 'How is this submitted?';
-
-  subWrap.appendChild(subLabel);
-  subWrap.appendChild(btnContainer);
-  subWrap.appendChild(noteWrap);
-
-  aContent.appendChild(title);
-  aContent.appendChild(meta);
-  aContent.appendChild(subWrap);
-
-  row.appendChild(checkWrap);
-  row.appendChild(aContent);
-
-  return row;
+  // Wrap in cards-wrap div
+  const wrapper = document.createElement('div');
+  wrapper.className = 'cards-wrap';
+  wrapper.appendChild(card);
+  return wrapper;
 }
 
-
-async function toggleRow(id, row) {
-  const nowChecked = !isChecked(id);
-  await setChecked(id, nowChecked);
-
-  row.classList.toggle('done', nowChecked);
-  if (nowChecked) {
-    const a = assignments.find(x => x.id === id);
-    // Show undo bar instead of plain toast
-    showUndo(id, a ? a.title : 'Assignment');
-    // Animate check then re-sort
-    setTimeout(() => renderList(), 600);
-    // Check if all done
-    const allDone = assignments.every(a => isChecked(a.id));
-    if (allDone) setTimeout(showCelebrate, 700);
-  } else {
-    renderList();
-    showToast('Unmarked ✓');
-  }
-}
-
-function renderProgress() {
-  const total   = assignments.length;
-  const checked = assignments.filter(a => isChecked(a.id)).length;
-  const pct     = total ? Math.round((checked/total)*100) : 0;
-  document.getElementById('progress-fill').style.width  = pct + '%';
-  document.getElementById('progress-label').textContent = `${checked} / ${total}`;
-}
-
-function renderAllDone() {
-  const total   = assignments.length;
-  const checked = assignments.filter(a => isChecked(a.id)).length;
-  const banner  = document.getElementById('all-done');
-  const list    = document.getElementById('assignment-list');
-  if (total > 0 && checked === total) {
-    banner.classList.add('show');
-    list.style.display = 'none';
-  } else {
-    banner.classList.remove('show');
-    list.style.display = 'block';
-  }
-}
-
-// ══════════════════════════════════════
-// CELEBRATE
-// ══════════════════════════════════════
-function showCelebrate() { document.getElementById('celebrate').classList.add('show'); }
-function closeCelebrate() { document.getElementById('celebrate').classList.remove('show'); }
-window.closeCelebrate = closeCelebrate;
-
-// ══════════════════════════════════════
-// UI HELPERS
-// ══════════════════════════════════════
-function showLoading(on) { document.getElementById('loading').style.display = on ? 'block':'none'; }
-
-let toastT;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  clearTimeout(toastT);
-  toastT = setTimeout(() => t.classList.remove('show'), 2200);
-}
-
-// Undo last check-off
-let lastChecked = null;
-let undoTimer   = null;
-
+// ── Undo ──
 function showUndo(id, title) {
   lastChecked = id;
-  const bar = document.getElementById('undo-bar');
-  const msg = document.getElementById('undo-msg');
-  msg.textContent = '"' + title.slice(0, 30) + (title.length > 30 ? '…' : '') + '" marked done';
-  bar.classList.add('show');
+  document.getElementById('undo-msg').textContent = '"'+(title.length>28?title.slice(0,28)+'…':title)+'" marked done';
+  document.getElementById('undo-bar').classList.add('show');
   clearTimeout(undoTimer);
-  undoTimer = setTimeout(() => {
-    bar.classList.remove('show');
-    lastChecked = null;
-  }, 5000);
+  undoTimer = setTimeout(()=>{ document.getElementById('undo-bar').classList.remove('show'); lastChecked=null; }, 5000);
 }
-
-async function undoCheck() {
+window.undoCheck = async function() {
   if (!lastChecked) return;
   const id = lastChecked;
   lastChecked = null;
   clearTimeout(undoTimer);
   document.getElementById('undo-bar').classList.remove('show');
-  await setChecked(id, false);
-  renderList();
+  localChecked[id] = false;
+  localStorage.setItem('nhq_checked', JSON.stringify(localChecked));
+  await fbWrite('nhq_checked/'+id, false);
+  renderCards();
   showToast('Undone ✓');
+};
+
+// ── UI helpers ──
+function showLoading(on) { document.getElementById('loading').style.display=on?'block':'none'; }
+function showEmpty()     { document.getElementById('empty').style.display='block'; }
+function showBanner(on)  { document.getElementById('setup-banner').classList.toggle('show', on); }
+
+let toastT;
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>t.classList.remove('show'),2200);
 }
-window.undoCheck = undoCheck;
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// ── Date label ──
+document.addEventListener('DOMContentLoaded',()=>{
+  const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const now=new Date();
+  const el=document.getElementById('date-label');
+  if(el) el.textContent=days[now.getDay()]+' · '+now.toLocaleDateString('en-US',{month:'long',day:'numeric'});
+});
 
-// ══════════════════════════════════════
-// AUTO-FILL FROM QR CODE URL PARAMS
-// ══════════════════════════════════════
-(function readQRParams() {
-  const p = new URLSearchParams(window.location.search);
-  const map = {
-    token: 'nhq_student_token',
-    fbUrl: 'nhq_student_fbUrl',
-    fbKey: 'nhq_student_fbKey',
-  };
-  let found = false;
-  Object.entries(map).forEach(([param, storageKey]) => {
-    const val = p.get(param);
-    if (val) { localStorage.setItem(storageKey, val); found = true; }
-  });
-  if (found) {
-    // Rebuild cfg from newly saved values
-    cfg.token = localStorage.getItem('nhq_student_token') || '';
-    cfg.fbUrl = localStorage.getItem('nhq_student_fbUrl') || '';
-    cfg.fbKey = localStorage.getItem('nhq_student_fbKey') || '';
-    localStorage.setItem('nhq_student_cfg', JSON.stringify(cfg));
-    // Clean URL so token isn't visible
-    if (window.history.replaceState) {
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  }
-})();
-
-// ══════════════════════════════════════
-// INIT
-// ══════════════════════════════════════
+// ── Init ──
 async function init() {
   showLoading(true);
-  const fbOk = await initFirebase();
-
-  if (fbOk) {
-    // Listen for remote changes
-    fbListen(data => {
-      localChecked = data;
-      localStorage.setItem('nhq_checked', JSON.stringify(localChecked));
-      renderList();
-    });
-  }
-
-  await loadICal();
+  await initFirebase();
+  await loadCanvas();
   showLoading(false);
-
-  // Show config if nothing is set up
-  if (!cfg.token) {
-    document.getElementById('empty').style.display = 'block';
-    document.getElementById('config-panel').classList.add('show');
-  }
+  if (!cfg.token) { showBanner(true); document.getElementById('config-panel').classList.add('show'); }
 }
-
-// Update date label safely
-document.addEventListener('DOMContentLoaded', () => {
-  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const now  = new Date();
-  const el   = document.querySelector('.date-label');
-  if (el) el.textContent = days[now.getDay()] + ' · ' + now.toLocaleDateString('en-US',{month:'long',day:'numeric'});
-});
 
 init();
 </script>
